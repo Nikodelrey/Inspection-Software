@@ -1,0 +1,2427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Minneapolis TISH Inspection Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  background: #fff;
+  color: #222;
+  max-width: 700px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* ── SCREEN 1 — MAIN MENU ─────────────────────────────── */
+#screen-main { display: block; }
+#screen-category { display: none; }
+#screen-item { display: none; }
+
+.page-intro {
+  padding: 14px 16px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.main-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #bbb;
+}
+
+.main-table th {
+  background: #e8e8e8;
+  border: 1px solid #bbb;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.main-table td {
+  border: 1px solid #ddd;
+  padding: 10px 14px;
+  vertical-align: middle;
+}
+
+.main-table tr:nth-child(even) td { background: #f5f5f5; }
+.main-table tr:nth-child(odd) td { background: #fff; }
+
+.main-link {
+  color: #1a56cc;
+  text-decoration: underline;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.main-link:active { color: #003a99; }
+
+.add-room-cell { text-align: right; width: 90px; }
+
+.btn-add {
+  background: #5b9bd5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 7px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-add:active { background: #3a7abf; }
+
+/* ── SCREEN 2 — CATEGORY ──────────────────────────────── */
+.cat-header-box {
+  background: #dce6f0;
+  border: 1px solid #aac0d8;
+  border-bottom: none;
+  padding: 10px 14px;
+}
+
+.cat-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cat-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-screen-title {
+  font-size: 17px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.na-checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.na-checkbox-wrap input[type=checkbox] {
+  width: 18px; height: 18px;
+  cursor: pointer;
+}
+
+.label-row {
+  background: #f5f7fa;
+  border: 1px solid #aac0d8;
+  border-bottom: none;
+  padding: 8px 14px;
+}
+
+.label-row label { font-size: 11px; color: #555; display: block; margin-bottom: 4px; }
+
+.label-input {
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 180px;
+  outline: none;
+}
+
+.cat-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #bbb;
+}
+
+.cat-items-table th {
+  background: #f0f0f0;
+  border-bottom: 2px solid #bbb;
+  padding: 9px 14px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.cat-items-table th:last-child { text-align: right; }
+
+.select-all-row td {
+  padding: 8px 14px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.select-all-row td label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.select-all-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+
+.item-row td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e8e8e8;
+  vertical-align: middle;
+}
+
+.item-row:hover td { background: #f0f5ff; }
+
+.item-check-cell { width: 40px; }
+.item-check-cell input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+
+.item-name-btn {
+  color: #1a56cc;
+  font-weight: bold;
+  font-size: 14px;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  padding: 0;
+  display: block;
+  width: 100%;
+}
+
+.item-name-btn:active { color: #003a99; }
+
+.item-comment-cell { width: 100px; text-align: right; }
+
+.btn-comment-add {
+  background: #5b9bd5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-comment-add:active { background: #3a7abf; }
+
+.item-rr-indicator {
+  display: inline-block;
+  width: 9px; height: 9px;
+  background: #cc3300;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.cat-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-top: 1px solid #ddd;
+  background: #fafafa;
+}
+
+.btn-cancel {
+  background: #5b9bd5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 9px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-save {
+  background: #5b9bd5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 9px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-cancel:active, .btn-save:active { background: #3a7abf; }
+
+/* ── SCREEN 3 — ITEM CONDITIONS ───────────────────────── */
+.item-screen-header {
+  padding: 12px 14px 8px;
+  border-bottom: 2px solid #bbb;
+}
+
+.item-screen-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1a2744;
+  margin-bottom: 2px;
+}
+
+.item-screen-breadcrumb {
+  font-size: 12px;
+  color: #777;
+}
+
+.conditions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.conditions-table .col-head-cond {
+  width: 55%;
+  padding: 9px 14px;
+  background: #f0f0f0;
+  border-bottom: 2px solid #bbb;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.conditions-table .col-head-comment {
+  padding: 9px 14px;
+  background: #f0f0f0;
+  border-bottom: 2px solid #bbb;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.cond-row td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e8e8e8;
+  vertical-align: middle;
+}
+
+.cond-row:hover td { background: #f5f8ff; }
+
+.cond-check-cell { width: 36px; }
+.cond-check-cell input[type=checkbox] { width: 17px; height: 17px; cursor: pointer; }
+
+.cond-text-cell { font-size: 13px; line-height: 1.4; }
+
+.cond-code {
+  font-weight: bold;
+  color: #444;
+}
+
+.cond-code-B { color: #1a56cc; }
+.cond-code-SC { color: #cc7700; }
+.cond-code-RRE { color: #cc3300; }
+.cond-code-RRP { color: #cc3300; }
+.cond-code-C { color: #555; }
+.cond-code-LIC { color: #7a00cc; }
+.cond-code-NA { color: #777; }
+
+.cond-comment-cell { }
+
+.cond-comment-input {
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  background: #fafafa;
+  transition: border-color 0.15s;
+}
+
+.cond-comment-input:focus { border-color: #5b9bd5; background: #fff; }
+
+.item-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-top: 1px solid #ddd;
+  background: #fafafa;
+  margin-top: 4px;
+}
+
+.btn-next {
+  background: #5b9bd5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 9px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-next:active { background: #3a7abf; }
+
+/* ── MAIN TOP BAR ─────────────────────────────────────── */
+.top-bar {
+  background: #1a2744;
+  color: white;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.top-bar-title {
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+}
+
+.btn-pdf-top {
+  background: #d4af37;
+  color: #1a2744;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-pdf-top:active { background: #b8971e; }
+
+/* Room count badge */
+.room-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #cc3300;
+  color: white;
+  border-radius: 50%;
+  width: 18px; height: 18px;
+  font-size: 10px;
+  font-weight: bold;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Inline comment display under item in cat screen */
+.item-inline-comment {
+  font-size: 11px;
+  color: #cc3300;
+  font-style: italic;
+  margin-top: 3px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <span class="top-bar-title">Minneapolis TISH Inspection Report</span>
+  <button class="btn-pdf-top" onclick="showPDFForm()">PDF Report</button>
+</div>
+
+<!-- SCREEN 0: PROPERTY INFO FORM -->
+<div id="screen-form" style="display:none;">
+  <div style="background:#1a2744;color:white;padding:12px 16px;font-size:16px;font-weight:bold;">
+    Property Information
+  </div>
+  <div style="padding:14px 16px;max-width:640px;margin:0 auto;">
+    <p style="font-size:13px;color:#555;margin-bottom:14px;">Fill in the property details before generating your PDF report.</p>
+
+    <div style="display:grid;gap:10px;">
+      <div>
+        <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Property Address *</label>
+        <input id="fi-address" type="text" placeholder="e.g. 2214 Saint Anthony Pkwy, Minneapolis MN 55418"
+          style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluator Name</label>
+          <input id="fi-evalname" type="text" placeholder="Full name"
+            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluator Phone</label>
+          <input id="fi-evalphone" type="tel" placeholder="612-000-0000"
+            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluation Date</label>
+          <input id="fi-date" type="date"
+            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluation #</label>
+          <input id="fi-evalnum" type="text" placeholder="e.g. 20262159"
+            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Current Owner Name</label>
+        <input id="fi-ownername" type="text" placeholder="Owner full name"
+          style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Owner Address</label>
+        <input id="fi-owneraddress" type="text" placeholder="Street address, city, state, zip"
+          style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Units</label>
+          <input id="fi-units" type="text" value="1"
+            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Building Type</label>
+          <input id="fi-bldgtype" type="text" value="Single Family Home"
+            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Zoning</label>
+          <input id="fi-zoning" type="text" value="UN1"
+            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;padding-bottom:30px;">
+      <button onclick="showMain()" style="background:none;border:1px solid #ccc;border-radius:6px;padding:12px 20px;font-size:14px;font-family:inherit;cursor:pointer;color:#555;">
+        Cancel
+      </button>
+      <button id="generateBtn" onclick="startGeneratePDF()" style="flex:1;background:#1a2744;color:white;border:none;border-radius:6px;padding:12px 20px;font-size:15px;font-weight:bold;font-family:inherit;cursor:pointer;">
+        Generate PDF Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 1: MAIN MENU -->
+<div id="screen-main">
+  <p class="page-intro">Click on each area of property to complete report. When all areas are complete confirm agreement and date of evaluation then press Submit Report.</p>
+  <table class="main-table">
+    <thead>
+      <tr>
+        <th>Evaluation Report</th>
+        <th style="text-align:right">Add Room</th>
+      </tr>
+    </thead>
+    <tbody id="mainTableBody"></tbody>
+  </table>
+</div>
+
+<!-- SCREEN 1B: ROOM PICKER -->
+<div id="screen-roompicker" style="display:none;">
+  <div style="background:#1a2744;color:white;padding:12px 14px;font-size:16px;font-weight:bold;" id="rpTitle"></div>
+  <p style="padding:12px 14px 6px;font-size:13px;color:#555;">Select a room to edit, or add a new one.</p>
+  <div id="roomPickerList" style="padding:0 14px;"></div>
+  <div style="padding:12px 14px;">
+    <button class="btn-cancel" onclick="showMain()">Back</button>
+  </div>
+</div>
+
+<!-- SCREEN 2: CATEGORY -->
+<div id="screen-category" style="display:none;">
+  <div class="cat-header-box">
+    <div class="cat-header-top">
+      <div class="cat-title-row">
+        <span class="cat-screen-title" id="catScreenTitle"></span>
+      </div>
+      <label class="na-checkbox-wrap">
+        <input type="checkbox" id="catNACheck" onchange="toggleCatNA(this)">
+        Not Applicable
+      </label>
+    </div>
+  </div>
+  <div class="label-row">
+    <label>Label or short description (optional)</label>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <div><strong>Label</strong> <input class="label-input" type="text" id="catLabelInput" placeholder=""></div>
+      <div id="catExtraFields"></div>
+    </div>
+  </div>
+  <table class="cat-items-table">
+    <thead>
+      <tr>
+        <th colspan="2">Meets Requirements</th>
+        <th>Comments</th>
+      </tr>
+    </thead>
+    <tbody id="catItemsBody"></tbody>
+  </table>
+  <div class="cat-actions">
+    <button class="btn-cancel" onclick="goBackFromCategory()">Back</button>
+    <button class="btn-save" onclick="saveCategory()">Save</button>
+  </div>
+</div>
+
+<!-- SCREEN 3: ITEM CONDITIONS -->
+<div id="screen-item" style="display:none;">
+  <div class="item-screen-header">
+    <div id="itemScreenBreadcrumb" style="font-size:15px;font-weight:bold;color:#1a1a1a;"></div>
+  </div>
+  <table class="conditions-table">
+    <thead>
+      <tr>
+        <th class="col-head-cond" colspan="2">Condition</th>
+        <th class="col-head-comment">Comments</th>
+      </tr>
+    </thead>
+    <tbody id="conditionsBody"></tbody>
+  </table>
+  <div class="item-actions">
+    <button class="btn-cancel" onclick="showCategory()">Back</button>
+    <button class="btn-next" onclick="saveItemAndReturn()">Next &gt;&gt;</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const categories = [
+  {
+    id: 'basement',
+    name: 'Basement',
+    items: [
+      {
+        id: 'bsmt-stairs', name: 'Basement Stairs/Railings',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'SC', text:'Staircase is not capable of supporting normal loads. Building permit needed to repair.' },
+          { code:'B', text:'Riser height is greater than 8".' },
+          { code:'B', text:'Tread depth is less than 9".' },
+          { code:'B', text:'Uneven riser heights.' },
+          { code:'B', text:'Stairway width is less than 30".' },
+          { code:'B', text:'Stairway headroom is less than 6 ft 8 in.' },
+          { code:'B', text:'Missing guardrail on open side of stairs.' },
+          { code:'B', text:'Openings in guardrail over 9".' },
+          { code:'RRE', text:'Missing handrail.' },
+          { code:'C', text:'Loose handrail.' },
+          { code:'B', text:'Handrail not gripable or not continuously gripable.' },
+          { code:'B', text:'Handrail is mounted too close to the wall.' },
+          { code:'B', text:'Handrail is not continous.' },
+          { code:'B', text:'Handrail height not 30"–34" or 34"–38" with ends returned.' },
+          { code:'B', text:'Door opens over the staircase.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'B', text:'Improper rise and run.' },
+        ]
+      },
+      {
+        id: 'bsmt-floors', name: 'Basement Floors',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Cracks in floor.' },
+          { code:'B', text:'Heaving in floor.' },
+          { code:'C', text:'Floor is uneven in areas.' },
+          { code:'C', text:'The concrete floor is not on all useable floor areas.' },
+          { code:'B', text:'There is a dirt floor over all or parts of the floor.' },
+          { code:'B', text:'Floor has holes or raised edges exceeding 1/2".' },
+          { code:'B', text:'There is no vapor barrier in the crawl space.' },
+          { code:'RRE', text:'Stored items or furnishings prevent reasonable evaluation. Evaluator to return when items removed.' },
+          { code:'C', text:'Limited view due to stored items or furnishings.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'bsmt-foundation', name: 'Foundation Walls',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Cracks in walls.' },
+          { code:'B', text:'Bulge in wall.' },
+          { code:'B', text:'Unprotected rigid foam insulation.' },
+          { code:'B', text:'Spalling in areas.' },
+          { code:'B', text:'Floor plates for walls are not treated wood.' },
+          { code:'C', text:'Patching on walls.' },
+          { code:'SC', text:'Potential for structural failure of wall. Building permit required for repairs.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'C', text:'Limited view due to stored items or furnishings.' },
+          { code:'C', text:'Walls painted.' },
+          { code:'RRE', text:'Stored items or furnishings prevent reasonable evaluation. Evaluator to return when items removed.' },
+        ]
+      },
+      {
+        id: 'bsmt-dampness', name: 'Evidence of Dampness or Staining',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Evidence of dampness and/or staining.' },
+          { code:'C', text:'Evidence of past dampness and/or staining.' },
+          { code:'C', text:'No evidence of dampness or staining.' },
+          { code:'C', text:'Efflorescence on walls.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'bsmt-floor-system', name: 'First Floor, Floor System',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Untreated wood members do not have a 18" minimum clearance to soil.' },
+          { code:'B', text:'Improper support of floor system. Overspanned floor joists.' },
+          { code:'B', text:'Improper support of floor system. Undersized floor joists.' },
+          { code:'B', text:'Damaged/deteriorated floor board(s).' },
+          { code:'B', text:'Missing joist hangers and/or joist hanger nails.' },
+          { code:'B', text:'Cracked, damaged, or deteriorated joists in areas.' },
+          { code:'B', text:'Cut joists.' },
+          { code:'B', text:'Improperly spliced joists.' },
+          { code:'B', text:'Improperly bored joist(s) over 1/4th joist depth.' },
+          { code:'B', text:'Bored holes closer than 2" to joist edge.' },
+          { code:'B', text:'Improperly notched joist(s) over 1/6th joist depth.' },
+          { code:'B', text:'Improperly notched joist(s) over 1/4th joist depth at end.' },
+          { code:'B', text:'Notching/boring beyond allowable on joists.' },
+          { code:'C', text:'Seepage marks under bath area.' },
+          { code:'RRE', text:'Stored items or furnishings prevent reasonable evaluation. Evaluator to return when items removed.' },
+          { code:'C', text:'Limited view due to stored items or furnishings.' },
+          { code:'SC', text:'Potential for structural failure of joist system. Building permit required for repairs.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'C', text:'Ceiling mostly covered.' },
+          { code:'C', text:'Seepage marks under kitchen area.' },
+        ]
+      },
+      {
+        id: 'bsmt-columns', name: 'Columns & Beams',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Decay at base of column.' },
+          { code:'C', text:'Some cracks in beam(s).' },
+          { code:'B', text:'Adjustable posts not welded/peened/anchored.' },
+          { code:'SC', text:'Temporary adjustable post(s) used in lieu of permanent support.' },
+          { code:'B', text:'There are undersized beam(s).' },
+          { code:'B', text:'Section of column is notched or bored.' },
+          { code:'B', text:'Section of beam is notched or bored.' },
+          { code:'B', text:'Beam has improper bearing on column.' },
+          { code:'C', text:'Columns appear to have settled.' },
+          { code:'C', text:'Columns appear to have been relocated.' },
+          { code:'SC', text:'Potential for structural failure of columns or beams. Building permit needed for repairs.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'C', text:'Mostly covered, could not fully evaluate.' },
+        ]
+      },
+      {
+        id: 'bsmt-sleeping', name: 'Basement Sleeping Rooms',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'There are no basement bedrooms.' },
+          { code:'C', text:'Yes, there are basement bedrooms. See Bedroom Section for details.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'bsmt-plumbing', name: 'Basement Plumbing Fixtures',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'SC', text:'Repairs made with improper materials.' },
+          { code:'SC', text:'Unvented fixture.' },
+          { code:'SC', text:'Improper waste/vent at basement fixture.' },
+          { code:'C', text:'Cannot fully view waste piping (concealed in walls).' },
+          { code:'C', text:'Basement bathroom - See "Bathroom" section for details.' },
+          { code:'SC', text:'Improper installation of fixture.' },
+          { code:'RRP', text:'Improper installation of fixture.' },
+          { code:'RRE', text:'Abandoned plumbing fixture(s) not properly sealed.' },
+          { code:'RRE', text:'Dry trap.' },
+          { code:'RRE', text:'Tape (improper) repairs with evidence of leakage/seepage.' },
+          { code:'SC', text:'Broken/leaking fixture(s).' },
+          { code:'RRE', text:'Broken/leaking fixture components. A permit is required if the fixture is replaced.' },
+          { code:'RRP', text:'Missing trap assembly on fixture. Plumbing permit is needed.' },
+          { code:'RRE', text:'Waste/vent is leaking.' },
+          { code:'RRE', text:'Missing trap on fixture.' },
+          { code:'RRE', text:'Open waste/vent pipe.' },
+          { code:'RRP', text:'Open waste pipe/missing fixture. Cap and remove or install a fixture. Installation of a plumbing fixture requires a plumbing permit.' },
+          { code:'RRP', text:'Open waste pipe/missing fixture. Installation of fixture requires a plumbing permit.' },
+          { code:'SC', text:'No visible signs of waste and/or venting.' },
+          { code:'SC', text:'Improper shower installation. Shower not properly connected to the waste/vent system.' },
+          { code:'SC', text:'Improper shower installation. Shower drains to floor drain.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Undersized water pipes.' },
+          { code:'SC', text:'Free standing shower lacks curb enclosure.' },
+          { code:'RRP', text:'Abandoned fixture must be properly sealed below grade. Plumbing permit required.' },
+          { code:'RRE', text:'Faucet below spill line.' },
+          { code:'SC', text:'Free standing shower lacks proper waste and venting.' },
+        ]
+      },
+      {
+        id: 'bsmt-sump', name: 'Sump Pumps',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'No sump pump present.' },
+          { code:'RRP', text:'Interior drain system drains to sanitary system. Installation of drain tile and sump pump require building permit.' },
+          { code:'RRE', text:'Loose cover on sump pump.' },
+          { code:'SC', text:'Extension cord wiring in lieu of permanent wiring. Installation of permanent wiring requires a state electric permit.' },
+          { code:'B', text:'The sump pump does not have a dedicated outlet. Installation of a dedicated outlet requires a state electrical permit.' },
+          { code:'RRE', text:'Electrical outlet has exposed wires.' },
+          { code:'RRE', text:'Sump pump does not discharge directly to exterior.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'RRE', text:'Interior drain system drains to sanitary sewer.' },
+          { code:'RRE', text:'Lacks positive drainage away from house.' },
+        ]
+      },
+      {
+        id: 'bsmt-smoke', name: 'Smoke Detectors / CO Detectors',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'RRE', text:'Missing CO Detector' },
+          { code:'RRE', text:'Improperly located CO detector.' },
+          { code:'RRE', text:'Inoperable CO Detector.' },
+          { code:'RRE', text:'Smoke detector(s) missing components.' },
+          { code:'RRE', text:'Missing cover. Cover needed for proper operation of smoke detector.' },
+          { code:'C', text:'Hard wired smoke detectors present. Not tested.' },
+          { code:'C', text:'Smoke detector on security system. Not tested.' },
+          { code:'RRE', text:'No detector in basement.' },
+          { code:'RRE', text:'Inoperable smoke detector.' },
+          { code:'RRE', text:'Does not respond when tested.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'RRE', text:'Smoke detector missing battery.' },
+          { code:'RRE', text:'Smoke detector too close to bathroom or kitchen. Must be located a minimum of 3 ft away from door.' },
+          { code:'RRE', text:'Smoke detector located within 20 ft of cooking appliance shall be equipped with a silencing switch or be of photoelectric type.' },
+        ]
+      },
+      {
+        id: 'bsmt-electrical', name: 'Basement Electrical Outlets/Fixtures',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'RRP', text:'Damaged fixture. Installation of a new fixture requires a state electric permit.' },
+          { code:'B', text:'Improperly strung 220 outlet.' },
+          { code:'B', text:'No light in stairwell.' },
+          { code:'B', text:'Unsupported, loose outlet.' },
+          { code:'B', text:'Unprotected light (missing globe)' },
+          { code:'B', text:'Reversed polarity outlet(s).' },
+          { code:'B', text:'NM wiring stapled to bottoms of floor joists.' },
+          { code:'B', text:'Unprotected NM wiring.' },
+          { code:'B', text:'Unsecured romex in areas.' },
+          { code:'B', text:'No power to outlet(s).' },
+          { code:'B', text:'Exposed wires, missing cover plates' },
+          { code:'RRE', text:'Uncapped wiring protruding from junction box, missing cover plate.' },
+          { code:'RRE', text:'GFCI outlet does not trip when tested.' },
+          { code:'RRE', text:'GFCI outlet trips but does not loose current when tested (improperly wired).' },
+          { code:'SC', text:'GFCI is ungrounded and trips manually.' },
+          { code:'RRP', text:'Exposed wires. Missing junction box. Installation of a junction box requires a state electric permit.' },
+          { code:'RRP', text:'Spliced wiring outside of a junction box. Installation of a junction box requires a state electric permit.' },
+          { code:'SC', text:'Broken bulb in fixture(s)' },
+          { code:'SC', text:'Extension cord wiring in lieu of permanent wiring. Installation of permanent wiring requires a state electric permit.' },
+          { code:'SC', text:'Broken receptacles/switches.' },
+          { code:'SC', text:'Broken string-switches on ceiling light(s).' },
+          { code:'SC', text:'Missing cover plate(s).' },
+          { code:'SC', text:'Missing junction box cover(s).' },
+          { code:'SC', text:'Missing knockouts.' },
+          { code:'SC', text:'Pendant type lights or outlets in use. Installation of new fixtures requires a state electric permit.' },
+          { code:'SC', text:'Ungrounded 3-prong outlet.' },
+          { code:'RRE', text:'Missing ceramic ring on ceiling light(s). Exposed contacts.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Ungrounded light fixtures/outlets located too close to water supply.' },
+          { code:'SC', text:'Metal pull-chain at laundry room light fixture' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'electric',
+    name: 'Electric',
+    extraFields: [
+      { key:'amp', label:'Amp', type:'text', placeholder:'e.g. 100' },
+      { key:'volts', label:'Volts', type:'select', options:['- Select a value -','110','120','220','240','120/240'] },
+    ],
+    items: [
+      {
+        id: 'elec-12', name: 'Electrical service installation',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Service panel lacks required clearance; minimum 30" width, 36" depth.' },
+          { code:'B', text:'Service panel not (fully) indexed.' },
+          { code:'C', text:'Service panel is located in a closet.' },
+          { code:'RRE', text:'Meter behind secured panel, ground not visible.' },
+          { code:'LIC', text:'Main disconnect not located in unit, unable to verify size. State electrical permit needed for any repairs.' },
+          { code:'RRE', text:'Power is turned off. Reinspection required.' },
+          { code:'RRE', text:'Cannot view meter for grounding due to stored items. Reinspection required when accessible.' },
+          { code:'RRE', text:'Loose cover on panel.' },
+          { code:'RRE', text:'Service panel lacks a dead front.' },
+          { code:'RRE', text:'Missing knockout(s).' },
+          { code:'RRE', text:'Electric shock possible by direct contact, missing breaker in panel.' },
+          { code:'RRE', text:'Loose jumper wire connection at water meter.' },
+          { code:'RRE', text:'No jumper wire at water meter' },
+          { code:'RRE', text:'Missing grounding clamp on house side of jumper at water meter.' },
+          { code:'RRE', text:'Missing grounding clamp on street side of jumper at water meter.' },
+          { code:'RRE', text:'Improper wire or clamps used for jumper at water meter.' },
+          { code:'C', text:'30 amp service may not be adequate for dwelling.' },
+          { code:'RRE', text:'Electrical system not properly grounded from panel to water system.' },
+          { code:'LIC', text:'More than one 220 volt circuit on 60 amp service. Safety check by licensed electrical contractor required. State electrical permit needed for any repairs.' },
+          { code:'LIC', text:'Evidence of altered/tampered system and/or overfusing. Safety check by licensed electrical contractor required.' },
+          { code:'LIC', text:'100 amp box/main breaker with the meter inside the house. Safety check by licensed electrical contractor required. Repairs need a state electrical permit.' },
+          { code:'C', text:'100 amp box/main breaker with older style meter inside the house.' },
+          { code:'C', text:'More than one conductor to breaker(s).' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Service Panel in bathroom - Electrical panel location does not comply with current State code for new installations.' },
+          { code:'SC', text:'Service Panel within 5 feet of water source' },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+          { code:'C', text:'Cannot fully view service panel ground wire due to finished area.' },
+        ]
+      },
+      {
+        id: 'elec-13', name: 'Separate 20-amp Kitchen Circuit indexed at Service Panel',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Separate 20-amp kitchen circuit is not indexed at service panel.' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'elec-14', name: 'Separate 20-amp Laundry Circuit indexed at Service Panel',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Separate 20-amp laundry circuit is not indexed at service panel' },
+          { code:'B', text:'Below Minimum Requirements:', freeText:true },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+          { code:'SC', text:'Suggested Correction:', freeText:true },
+          { code:'LIC', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'plumbing',
+    name: 'Plumbing',
+    items: [
+      {
+        id: 'plmb-supply', name: 'Water Supply Piping',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Galvanized supply system — noted, not required repair if functional.' },
+          { code:'B', text:'Water piping leaks.' },
+          { code:'B', text:'Inadequate water flow or pressure.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'plmb-drain', name: 'Waste & Vent Piping',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Open sewer line (broken or missing cover).' },
+          { code:'B', text:'Missing P-trap (open drain).' },
+          { code:'B', text:'Open vent (holes or broken).' },
+          { code:'C', text:'S-trap present (noted, not required in upper floors).' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'plmb-fixtures', name: 'Plumbing Fixtures',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Fixture is not functional.' },
+          { code:'B', text:'Fixture leaks significantly.' },
+          { code:'B', text:'Faucet spout below spill line (backflow risk).' },
+          { code:'C', text:'Toilet ballcock not anti-siphon (noted, not required repair).' },
+          { code:'C', text:'Missing clean-out plug.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'plmb-floor-drain', name: 'Floor Drains',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'No basement floor drain (noted, not required).' },
+          { code:'B', text:'Floor drain is blocked or not functional.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'water-heater',
+    name: 'Water Heater',
+    items: [
+      {
+        id: 'wh-general', name: 'Water Heater — General Condition',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Water heater shows signs of rust or leaking.' },
+          { code:'B', text:'Water heater is not functional.' },
+          { code:'C', text:'Water heater is aging — noted for information.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'wh-tp', name: 'T&P Relief Valve',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'T&P relief valve missing. Permit required to install.' },
+          { code:'B', text:'T&P relief valve broken or not functional. Permit required to replace.' },
+          { code:'B', text:'T&P discharge pipe missing or improperly directed.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'wh-flue', name: 'Water Heater Flue/Vent',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Flue is improperly connected or missing sections.' },
+          { code:'B', text:'Flue pitch is inadequate (must slope upward).' },
+          { code:'B', text:'Flue terminates improperly.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRP', text:'Repair/Replace (homeowner can pull permit):', freeText:true },
+          { code:'LIC', text:'Repair/Replace (licensed contractor required):', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'heating',
+    name: 'Heating & Cooling',
+    items: [
+      {
+        id: 'heat-furnace', name: 'Furnace / Boiler — General',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Heating plant not functional.' },
+          { code:'B', text:'Evidence of heat exchanger failure.' },
+          { code:'SC', text:'System requires replacement. Licensed contractor permit required.' },
+          { code:'C', text:'System is aging — noted for information.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+          { code:'LIC', text:'Repair/Replace (licensed contractor required):', freeText:true },
+        ]
+      },
+      {
+        id: 'heat-flue', name: 'Furnace / Boiler Flue (Vent)',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Flue is improperly connected or missing sections.' },
+          { code:'B', text:'Flue pitch is inadequate.' },
+          { code:'B', text:'Flue terminates improperly.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'LIC', text:'Repair/Replace — licensed contractor and permit required:', freeText:true },
+        ]
+      },
+      {
+        id: 'heat-boiler-prv', name: 'Boiler — Pressure Relief Valve',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'P-relief valve missing. Permit required.' },
+          { code:'B', text:'P-relief valve not functional. Permit required.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRP', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'heat-gas', name: 'Gas Piping',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Uncapped gas line. Permit required if installing appliance.' },
+          { code:'B', text:'Improper gas line materials.' },
+          { code:'B', text:'Evidence of gas leak.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRP', text:'Repair/Replace (homeowner permit for dryer/stove/WH):', freeText:true },
+          { code:'LIC', text:'Repair/Replace (licensed contractor if to heating plant):', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'laundry',
+    name: 'Laundry',
+    items: [
+      {
+        id: 'laund-general', name: 'Laundry Area — General',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'No laundry facility (noted, not required repair).' },
+          { code:'B', text:'Dryer vent improperly terminated.' },
+          { code:'B', text:'Dryer vent is plastic/foil accordion type.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'kitchen',
+    name: 'Kitchen',
+    items: [
+      {
+        id: 'kit-general', name: 'Kitchen — General Condition',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Kitchen does not have required ventilation.' },
+          { code:'B', text:'Countertops or cabinets have structural defects.' },
+          { code:'C', text:'Evidence of past moisture/staining.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'kit-outlets', name: 'Kitchen Electrical / GFCI',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'GFCI protection missing at kitchen counter outlets.' },
+          { code:'B', text:'Open junction box.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'kit-plumbing', name: 'Kitchen Plumbing',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Sink faucet leaks.' },
+          { code:'B', text:'No hot water at kitchen sink.' },
+          { code:'B', text:'Drain not properly vented.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'dining-living',
+    name: 'Dining Room/Living Room',
+    items: [
+      {
+        id: 'dlr-general', name: 'General Condition',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Holes in walls/ceilings (noted, not required repair).' },
+          { code:'B', text:'Structural wall or ceiling defects.' },
+          { code:'C', text:'Evidence of past moisture/staining.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'dlr-windows', name: 'Windows',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Missing storm or prime window (noted, not required repair).' },
+          { code:'B', text:'Window sash is broken or not operable.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'dlr-outlets', name: 'Electrical Outlets/Fixtures',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Open junction box.' },
+          { code:'B', text:'Exposed/uncapped wiring.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'bathroom',
+    name: 'Bathroom',
+    items: [
+      {
+        id: 'bath-general', name: 'Bathroom — General Condition',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Bathroom ventilation inadequate.' },
+          { code:'C', text:'Evidence of past moisture/staining.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'bath-gfci', name: 'Bathroom GFCI',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'GFCI protection missing in bathroom.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'bath-plumbing', name: 'Bathroom Plumbing',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'No hot water at bathroom fixtures.' },
+          { code:'B', text:'Plumbing fixture leaks significantly.' },
+          { code:'B', text:'Toilet leaks at base (floor rot risk).' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'hallways',
+    name: 'Hallways/Stairwells',
+    items: [
+      {
+        id: 'hall-stairs', name: 'Interior Stairs/Railings',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Riser height is greater than 8".' },
+          { code:'B', text:'Tread depth is less than 9".' },
+          { code:'B', text:'Missing guardrail on open side of stairs.' },
+          { code:'B', text:'Openings in guardrail over 9".' },
+          { code:'RRE', text:'Missing handrail.' },
+          { code:'B', text:'Stairway headroom is less than 6 ft 8 in.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'hall-egress', name: 'Egress',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Egress is inadequate or blocked.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'bedroom',
+    name: 'Bedroom',
+    items: [
+      {
+        id: 'bed-general', name: 'Bedroom — General Condition',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Holes in walls/ceilings (noted, not required repair).' },
+          { code:'B', text:'Structural defects present.' },
+          { code:'C', text:'Evidence of past moisture/staining.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'bed-egress', name: 'Bedroom Egress',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Egress window does not meet minimum requirements.' },
+          { code:'B', text:'Egress window not operable from inside without tools.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'bed-smoke', name: 'Smoke / CO Detectors',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Missing smoke detector outside this sleeping area.' },
+          { code:'B', text:'Missing CO detector within 10 feet of sleeping room.' },
+          { code:'B', text:'Detector not functional.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'porch-sunroom',
+    name: 'Porch/Sunroom/Other',
+    items: [
+      {
+        id: 'porch-general', name: 'Porch/Sunroom — General',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Structural defects present.' },
+          { code:'B', text:'Railings or guardrails missing or defective.' },
+          { code:'C', text:'Evidence of past moisture/staining.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'attic',
+    name: 'Attic Space',
+    items: [
+      {
+        id: 'attic-insulation', name: 'Insulation',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Insulation level noted (informational for energy disclosure).' },
+          { code:'B', text:'Insulation improperly installed — blocking ventilation.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+        ]
+      },
+      {
+        id: 'attic-venting', name: 'Attic Venting',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Inadequate attic ventilation.' },
+          { code:'B', text:'Vents are blocked or missing.' },
+          { code:'C', text:'Evidence of past moisture/condensation.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'attic-structure', name: 'Roof Structure',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'SC', text:'Roof structure is not capable of supporting normal loads. Permit required.' },
+          { code:'B', text:'Evidence of rafters/trusses damaged or deteriorated.' },
+          { code:'C', text:'Evidence of past moisture/staining.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'exterior',
+    name: 'Exterior',
+    items: [
+      {
+        id: 'ext-walls', name: 'Exterior Walls',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Exterior siding/cladding is deteriorated or damaged.' },
+          { code:'B', text:'Evidence of moisture intrusion.' },
+          { code:'C', text:'Cosmetic deterioration only — noted.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'ext-foundation', name: 'Foundation (Exterior)',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Foundation shows cracks or movement.' },
+          { code:'B', text:'Grade does not slope away from foundation.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'ext-roof', name: 'Roof Covering',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Roof condition noted (informational only — not a required repair).' },
+          { code:'B', text:'Flashing is missing or improperly installed.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+        ]
+      },
+      {
+        id: 'ext-chimney', name: 'Chimney',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Mortar joints are missing or deteriorated.' },
+          { code:'B', text:'Chimney cap is missing or damaged.' },
+          { code:'B', text:'Flashing at chimney is missing or damaged.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'ext-windows', name: 'Windows (Exterior)',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Missing storm or prime windows (noted, not required repair).' },
+          { code:'B', text:'Window frame shows significant deterioration.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'ext-porches', name: 'Porches & Stoops',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Structural defects in porch or stoop.' },
+          { code:'B', text:'Guardrail or handrail missing or defective.' },
+          { code:'C', text:'Evidence of settling or movement.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'open-porch',
+    name: 'Open/Unheated Porch',
+    items: [
+      {
+        id: 'oporch-general', name: 'Open Porch — General',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Structural defects present.' },
+          { code:'B', text:'Guardrail or handrail missing or defective.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'garage',
+    name: 'Garage',
+    items: [
+      {
+        id: 'gar-structure', name: 'Garage Structure',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'SC', text:'Garage structure not capable of supporting normal loads.' },
+          { code:'B', text:'Structural defects present.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'gar-door', name: 'Garage Door & Opener',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Automatic opener safety-reverse not functioning.' },
+          { code:'B', text:'Garage door does not seal properly.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'miscellaneous',
+    name: 'Miscellaneous',
+    items: [
+      {
+        id: 'misc-vermin', name: 'Evidence of Vermin',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Evidence of active rodent infestation.' },
+          { code:'B', text:'Evidence of wood-destroying insects.' },
+          { code:'C', text:'Evidence of past activity only.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+          { code:'RRE', text:'Repair/Replace:', freeText:true },
+        ]
+      },
+      {
+        id: 'misc-sanitation', name: 'Sanitation / Clutter',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'B', text:'Clutter is obstructing inspection of required items.' },
+          { code:'C', text:'General sanitation concern — noted.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'wall-insulation',
+    name: 'Wall Insulation',
+    items: [
+      {
+        id: 'wallins-general', name: 'Wall Insulation (Energy Disclosure)',
+        conditions: [
+          { code:'NA', text:'Not Applicable/Does Not Apply' },
+          { code:'C', text:'Wall insulation present — noted for energy disclosure.' },
+          { code:'C', text:'No wall insulation visible — noted for energy disclosure.' },
+          { code:'C', text:'Other Comment:', freeText:true },
+        ]
+      },
+    ]
+  },
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+var rooms = {};
+var currentCatId = null;
+var currentRoomIdx = 0;
+var currentItemId = null;
+var cameFromPicker = false;
+
+function makeRoomState(cat) {
+  var extraData = {};
+  if (cat.extraFields) {
+    cat.extraFields.forEach(function(f) { extraData[f.key] = ""; });
+  }
+  var itemStates = {};
+  cat.items.forEach(function(item) {
+    itemStates[item.id] = {
+      meetsReq: false,
+      conditions: item.conditions.map(function() { return { checked: false, comment: "" }; })
+    };
+  });
+  return { label: "", na: false, extraData: extraData, itemStates: itemStates };
+}
+
+categories.forEach(function(cat) {
+  rooms[cat.id] = [makeRoomState(cat)];
+});
+
+// ═══════════════════════════════════════
+// SCREEN NAVIGATION
+// ═══════════════════════════════════════
+function showScreen(id) {
+  var screens = ["screen-form","screen-main","screen-roompicker","screen-category","screen-item"];
+  screens.forEach(function(s) {
+    document.getElementById(s).style.display = "none";
+  });
+  document.getElementById(id).style.display = "block";
+  window.scrollTo(0, 0);
+}
+
+function showMain() {
+  cameFromPicker = false;
+  renderMain();
+  showScreen("screen-main");
+}
+
+function goBackFromCategory() {
+  if (cameFromPicker) {
+    showRoomPicker(currentCatId);
+  } else {
+    showMain();
+  }
+}
+
+function showCategory() {
+  var cat = categories.find(function(c) { return c.id === currentCatId; });
+  var room = rooms[currentCatId][currentRoomIdx];
+  renderCategoryItems(cat, room);
+  showScreen("screen-category");
+}
+
+// ═══════════════════════════════════════
+// SCREEN 1 - MAIN MENU
+// ═══════════════════════════════════════
+function renderMain() {
+  var tbody = document.getElementById("mainTableBody");
+  tbody.innerHTML = "";
+  categories.forEach(function(cat) {
+    var roomList = rooms[cat.id];
+    var rrCount = 0;
+    roomList.forEach(function(room) {
+      if (room.na) return;
+      cat.items.forEach(function(item) {
+        var s = room.itemStates[item.id];
+        if (!s.meetsReq) {
+          var hasRR = s.conditions.some(function(c, i) {
+            return c.checked && ["B","RRE","RRP","SC","LIC"].indexOf(item.conditions[i].code) >= 0;
+          });
+          if (hasRR) rrCount++;
+        }
+      });
+    });
+
+    var tr = document.createElement("tr");
+
+    var td1 = document.createElement("td");
+    var nameBtn = document.createElement("button");
+    nameBtn.className = "main-link";
+    nameBtn.innerHTML = cat.name;
+    if (rrCount > 0) {
+      nameBtn.innerHTML += ' <span class="room-badge">' + rrCount + "</span>";
+    }
+    if (roomList.length > 1) {
+      nameBtn.innerHTML += ' <span class="room-badge" style="background:#1a2744;">' + roomList.length + "</span>";
+    }
+    nameBtn.addEventListener("click", (function(id) {
+      return function() { handleCategoryClick(id); };
+    })(cat.id));
+    td1.appendChild(nameBtn);
+
+    var td2 = document.createElement("td");
+    td2.className = "add-room-cell";
+    var addBtn = document.createElement("button");
+    addBtn.className = "btn-add";
+    addBtn.textContent = "Add";
+    addBtn.addEventListener("click", (function(id) {
+      return function(e) { e.stopPropagation(); addNewRoom(id); };
+    })(cat.id));
+    td2.appendChild(addBtn);
+
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tbody.appendChild(tr);
+  });
+}
+
+function handleCategoryClick(catId) {
+  if (rooms[catId].length === 1) {
+    cameFromPicker = false;
+    openCategory(catId, 0);
+  } else {
+    showRoomPicker(catId);
+  }
+}
+
+function addNewRoom(catId) {
+  var cat = categories.find(function(c) { return c.id === catId; });
+  rooms[catId].push(makeRoomState(cat));
+  cameFromPicker = false;
+  openCategory(catId, rooms[catId].length - 1);
+}
+
+// ═══════════════════════════════════════
+// SCREEN 1B - ROOM PICKER
+// ═══════════════════════════════════════
+function showRoomPicker(catId) {
+  currentCatId = catId;
+  var cat = categories.find(function(c) { return c.id === catId; });
+  document.getElementById("rpTitle").textContent = cat.name;
+
+  var list = document.getElementById("roomPickerList");
+  list.innerHTML = "";
+
+  rooms[catId].forEach(function(room, ri) {
+    var rrCount = 0;
+    cat.items.forEach(function(item) {
+      var s = room.itemStates[item.id];
+      if (s && s.conditions.some(function(c, i) {
+        return c.checked && ["B","RRE","RRP","SC","LIC"].indexOf(item.conditions[i].code) >= 0;
+      })) rrCount++;
+    });
+
+    var label = room.label ? ('"' + room.label + '"') : ("Room " + (ri + 1));
+
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #ddd;";
+
+    var openBtn = document.createElement("button");
+    openBtn.className = "main-link";
+    openBtn.innerHTML = label + (rrCount > 0 ? ' <span class="room-badge">' + rrCount + " RR</span>" : "");
+    openBtn.addEventListener("click", (function(id, idx) {
+      return function() { cameFromPicker = true; openCategory(id, idx); };
+    })(catId, ri));
+
+    var delBtn = document.createElement("button");
+    delBtn.textContent = "Delete";
+    delBtn.style.cssText = "background:none;border:1px solid #cc3300;color:#cc3300;border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;";
+    delBtn.addEventListener("click", (function(id, idx) {
+      return function() { deleteRoom(id, idx); };
+    })(catId, ri));
+
+    row.appendChild(openBtn);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+
+  var addRow = document.createElement("div");
+  addRow.style.cssText = "padding:12px 0;";
+  var addBtn = document.createElement("button");
+  addBtn.className = "btn-add";
+  addBtn.textContent = "+ Add Another Room";
+  addBtn.style.width = "100%";
+  addBtn.style.padding = "10px";
+  addBtn.addEventListener("click", function() {
+    var cat2 = categories.find(function(c) { return c.id === catId; });
+    rooms[catId].push(makeRoomState(cat2));
+    cameFromPicker = true;
+    openCategory(catId, rooms[catId].length - 1);
+  });
+  addRow.appendChild(addBtn);
+  list.appendChild(addRow);
+
+  showScreen("screen-roompicker");
+}
+
+function deleteRoom(catId, roomIdx) {
+  if (rooms[catId].length <= 1) {
+    alert("Cannot delete the only room.");
+    return;
+  }
+  if (!confirm("Delete this room and all its data?")) return;
+  rooms[catId].splice(roomIdx, 1);
+  showRoomPicker(catId);
+}
+
+// ═══════════════════════════════════════
+// SCREEN 2 - CATEGORY
+// ═══════════════════════════════════════
+function openCategory(catId, roomIdx) {
+  currentCatId = catId;
+  currentRoomIdx = roomIdx;
+  var cat = categories.find(function(c) { return c.id === catId; });
+  var room = rooms[catId][roomIdx];
+  var roomLabel = rooms[catId].length > 1 ? (" (Room " + (roomIdx + 1) + ")") : "";
+
+  document.getElementById("catScreenTitle").textContent = cat.name + roomLabel;
+  document.getElementById("catNACheck").checked = room.na;
+  document.getElementById("catLabelInput").value = room.label || "";
+
+  renderExtraFields(cat, room);
+  renderCategoryItems(cat, room);
+  showScreen("screen-category");
+}
+
+function renderExtraFields(cat, room) {
+  var container = document.getElementById("catExtraFields");
+  container.innerHTML = "";
+  if (!cat.extraFields || cat.extraFields.length === 0) return;
+
+  var lbl = document.createElement("span");
+  lbl.textContent = "Service at Panel";
+  lbl.style.cssText = "font-size:11px;color:#555;margin-right:8px;";
+  container.appendChild(lbl);
+
+  cat.extraFields.forEach(function(field) {
+    var wrap = document.createElement("span");
+    wrap.style.cssText = "display:inline-flex;align-items:center;gap:5px;margin-right:12px;";
+
+    var lbl2 = document.createElement("strong");
+    lbl2.textContent = field.label;
+    wrap.appendChild(lbl2);
+
+    if (field.type === "text") {
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.id = "extra-" + field.key;
+      inp.value = room.extraData[field.key] || "";
+      inp.style.cssText = "border:1px solid #bbb;border-radius:3px;padding:4px 8px;font-size:13px;width:80px;font-family:inherit;outline:none;";
+      wrap.appendChild(inp);
+    } else if (field.type === "select") {
+      var sel = document.createElement("select");
+      sel.id = "extra-" + field.key;
+      sel.style.cssText = "border:1px solid #bbb;border-radius:3px;padding:4px 8px;font-size:13px;font-family:inherit;outline:none;background:white;";
+      field.options.forEach(function(opt) {
+        var o = document.createElement("option");
+        o.value = (opt === field.options[0]) ? "" : opt;
+        o.textContent = opt;
+        if ((room.extraData[field.key] || "") === o.value) o.selected = true;
+        sel.appendChild(o);
+      });
+      wrap.appendChild(sel);
+    }
+    container.appendChild(wrap);
+  });
+}
+
+function renderCategoryItems(cat, room) {
+  var tbody = document.getElementById("catItemsBody");
+  tbody.innerHTML = "";
+
+  // Select All row
+  var selRow = document.createElement("tr");
+  selRow.className = "select-all-row";
+  var selTd = document.createElement("td");
+  selTd.colSpan = 2;
+  var selLabel = document.createElement("label");
+  selLabel.style.cssText = "display:flex;align-items:center;gap:8px;font-weight:bold;font-size:14px;cursor:pointer;";
+  var selCheck = document.createElement("input");
+  selCheck.type = "checkbox";
+  selCheck.id = "selectAllCheck";
+  selCheck.style.cssText = "width:18px;height:18px;cursor:pointer;";
+  selCheck.addEventListener("change", function() { selectAll(this); });
+  selLabel.appendChild(selCheck);
+  selLabel.appendChild(document.createTextNode("Select All"));
+  selTd.appendChild(selLabel);
+  var selTd2 = document.createElement("td");
+  selRow.appendChild(selTd);
+  selRow.appendChild(selTd2);
+  tbody.appendChild(selRow);
+
+  cat.items.forEach(function(item, idx) {
+    var s = room.itemStates[item.id];
+    var hasRR = s.conditions.some(function(c, i) {
+      return c.checked && ["B","RRE","RRP","SC","LIC"].indexOf(item.conditions[i].code) >= 0;
+    });
+    var hasFindings = s.conditions.some(function(c) { return c.checked; });
+
+    var tr = document.createElement("tr");
+    tr.className = "item-row";
+
+    // Checkbox cell
+    var td1 = document.createElement("td");
+    td1.className = "item-check-cell";
+    var chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.checked = s.meetsReq;
+    chk.style.cssText = "width:18px;height:18px;cursor:pointer;";
+    chk.addEventListener("change", (function(id) {
+      return function() { toggleMeetsReq(id, this); };
+    })(item.id));
+    td1.appendChild(chk);
+
+    // Name cell
+    var td2 = document.createElement("td");
+    var nameBtn = document.createElement("button");
+    nameBtn.className = "item-name-btn";
+    nameBtn.innerHTML = (idx + 1) + ". " + item.name;
+    if (hasRR) nameBtn.innerHTML += ' <span class="item-rr-indicator"></span>';
+    nameBtn.addEventListener("click", (function(id) {
+      return function() { openItem(id); };
+    })(item.id));
+    td2.appendChild(nameBtn);
+
+    if (hasRR) {
+      var note = document.createElement("div");
+      note.className = "item-inline-comment";
+      note.textContent = "Required repair flagged";
+      td2.appendChild(note);
+    } else if (hasFindings) {
+      var note2 = document.createElement("div");
+      note2.className = "item-inline-comment";
+      note2.textContent = "Has comments";
+      td2.appendChild(note2);
+    }
+
+    // Comment button cell
+    var td3 = document.createElement("td");
+    td3.className = "item-comment-cell";
+    var addBtn = document.createElement("button");
+    addBtn.className = "btn-comment-add";
+    addBtn.textContent = "Add";
+    addBtn.addEventListener("click", (function(id) {
+      return function() { openItem(id); };
+    })(item.id));
+    td3.appendChild(addBtn);
+
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tr.appendChild(td3);
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleMeetsReq(itemId, cb) {
+  rooms[currentCatId][currentRoomIdx].itemStates[itemId].meetsReq = cb.checked;
+  updateSelectAll();
+}
+
+function selectAll(cb) {
+  var room = rooms[currentCatId][currentRoomIdx];
+  var cat = categories.find(function(c) { return c.id === currentCatId; });
+  cat.items.forEach(function(item) {
+    room.itemStates[item.id].meetsReq = cb.checked;
+  });
+  openCategory(currentCatId, currentRoomIdx);
+}
+
+function updateSelectAll() {
+  var room = rooms[currentCatId][currentRoomIdx];
+  var cat = categories.find(function(c) { return c.id === currentCatId; });
+  var all = cat.items.every(function(item) { return room.itemStates[item.id].meetsReq; });
+  var el = document.getElementById("selectAllCheck");
+  if (el) el.checked = all;
+}
+
+function toggleCatNA(cb) {
+  rooms[currentCatId][currentRoomIdx].na = cb.checked;
+}
+
+function saveExtraFields() {
+  var cat = categories.find(function(c) { return c.id === currentCatId; });
+  if (!cat.extraFields) return;
+  cat.extraFields.forEach(function(field) {
+    var el = document.getElementById("extra-" + field.key);
+    if (el) rooms[currentCatId][currentRoomIdx].extraData[field.key] = el.value;
+  });
+}
+
+function saveCategory() {
+  rooms[currentCatId][currentRoomIdx].label = document.getElementById("catLabelInput").value;
+  saveExtraFields();
+  if (cameFromPicker) {
+    showRoomPicker(currentCatId);
+  } else {
+    showMain();
+  }
+}
+
+// ═══════════════════════════════════════
+// SCREEN 3 - ITEM CONDITIONS
+// ═══════════════════════════════════════
+function openItem(itemId) {
+  currentItemId = itemId;
+  var cat = categories.find(function(c) { return c.id === currentCatId; });
+  var item = cat.items.find(function(i) { return i.id === itemId; });
+  var room = rooms[currentCatId][currentRoomIdx];
+  var s = room.itemStates[itemId];
+  var roomLabel = rooms[currentCatId].length > 1 ? (" (Room " + (currentRoomIdx + 1) + ")") : "";
+
+  document.getElementById("itemScreenBreadcrumb").textContent = cat.name + roomLabel + " > " + item.name;
+
+  var tbody = document.getElementById("conditionsBody");
+  tbody.innerHTML = "";
+
+  item.conditions.forEach(function(cond, idx) {
+    var st = s.conditions[idx];
+    var tr = document.createElement("tr");
+    tr.className = "cond-row";
+
+    var td1 = document.createElement("td");
+    td1.className = "cond-check-cell";
+    var chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.checked = st.checked;
+    chk.style.cssText = "width:17px;height:17px;cursor:pointer;";
+    chk.addEventListener("change", (function(iid, i) {
+      return function() { rooms[currentCatId][currentRoomIdx].itemStates[iid].conditions[i].checked = this.checked; };
+    })(itemId, idx));
+    td1.appendChild(chk);
+
+    var td2 = document.createElement("td");
+    td2.className = "cond-text-cell";
+    var codeSpan = document.createElement("span");
+    codeSpan.className = "cond-code cond-code-" + cond.code;
+    codeSpan.textContent = cond.code;
+    td2.appendChild(codeSpan);
+    td2.appendChild(document.createTextNode(" : " + cond.text));
+
+    var td3 = document.createElement("td");
+    td3.className = "cond-comment-cell";
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.className = "cond-comment-input";
+    inp.value = st.comment || "";
+    if (cond.freeText) inp.placeholder = "Enter detail...";
+    inp.addEventListener("input", (function(iid, i) {
+      return function() { rooms[currentCatId][currentRoomIdx].itemStates[iid].conditions[i].comment = this.value; };
+    })(itemId, idx));
+    td3.appendChild(inp);
+
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tr.appendChild(td3);
+    tbody.appendChild(tr);
+  });
+
+  showScreen("screen-item");
+}
+
+function saveItemAndReturn() {
+  showCategory();
+}
+
+// ═══════════════════════════════════════
+// PDF GENERATION
+// ═══════════════════════════════════════
+function startGeneratePDF() {
+  var btn = document.getElementById("generateBtn");
+  if (btn) { btn.textContent = "Generating..."; btn.disabled = true; }
+  setTimeout(function() {
+    try {
+      generatePDF();
+    } catch(e) {
+      alert("Error: " + e.message);
+    }
+    if (btn) { btn.textContent = "Generate PDF Report"; btn.disabled = false; }
+  }, 100);
+}
+
+function showPDFForm() {
+  // Set today as default date
+  var today = new Date();
+  var yyyy = today.getFullYear();
+  var mm = String(today.getMonth() + 1).padStart(2, "0");
+  var dd = String(today.getDate()).padStart(2, "0");
+  var el = document.getElementById("fi-date");
+  if (el && !el.value) el.value = yyyy + "-" + mm + "-" + dd;
+  showScreen("screen-form");
+}
+
+function generatePDF() {
+  // Check multiple ways jsPDF might be available
+  var jsPDF = null;
+  if (typeof window.jspdf !== "undefined" && window.jspdf.jsPDF) {
+    jsPDF = window.jspdf.jsPDF;
+  } else if (typeof jspdf !== "undefined" && jspdf.jsPDF) {
+    jsPDF = jspdf.jsPDF;
+  } else {
+    alert("PDF library not loaded yet. Please wait a moment and try again, or check your internet connection.");
+    return;
+  }
+  var doc = new jsPDF({ unit: "mm", format: "letter" });
+  var W = doc.internal.pageSize.getWidth();
+  var H = doc.internal.pageSize.getHeight();
+  var ML = 18, MR = 18;
+  var CW = W - ML - MR;
+  var y = 0;
+
+  var address = document.getElementById("fi-address").value || "[Address not entered]";
+  // Format date from YYYY-MM-DD to M/D/YYYY
+  var rawDate = document.getElementById("fi-date").value || "";
+  var evalDate = rawDate ? (function(d){ var p=d.split("-"); return p[1]+"/"+p[2]+"/"+p[0]; })(rawDate) : new Date().toLocaleDateString();
+  var evalName = document.getElementById("fi-evalname").value || "";
+  var evalPhone = document.getElementById("fi-evalphone").value || "";
+  var evalNum = document.getElementById("fi-evalnum").value || "";
+  var ownerName = document.getElementById("fi-ownername").value || "";
+  var ownerAddress = document.getElementById("fi-owneraddress").value || "";
+  var units = document.getElementById("fi-units").value || "1";
+  var bldgType = document.getElementById("fi-bldgtype").value || "Single Family Home";
+  var zoning = document.getElementById("fi-zoning").value || "UN1";
+
+  // ── LEGEND BOX ──────────────────────────────────────────────
+  function drawLegendBox() {
+    doc.setFillColor(245, 245, 245);
+    doc.rect(ML, y, CW, 22, "F");
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.3);
+    doc.rect(ML, y, CW, 22, "S");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(0, 0, 0);
+    doc.text("EVALUATION CODES:", ML + 2, y + 5);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    var codes1 = "M :=Meets Minimum Requirements    C :=Comments    NA :=Not Applicable/Does Not Apply    B :=Below Minimum Requirements    SC :=Suggested Correction";
+    var codes2 = "RRE :=Repair/Replace, Evaluator Verification Required    RRP :=Repair/Replace, Permit/City Inspector Required    LIC :=Safety Check, Licensed Contractor Required";
+    doc.text(codes1, ML + 2, y + 10);
+    doc.text(codes2, ML + 2, y + 15);
+        var noteText = 'Each item may have more than one code. Items marked RRE or RRP indicate that the item must be repaired or replaced within 90 days of closing. Items marked LIC require a licensed contractor to evaluate the safety of the item and may or may not require a repair. Buyer must sign acknowledgment of responsibility agreement unless a COA has been issued to seller. If the house does not sell, the seller does not have to do the repairs.';
+    var noteLines = doc.splitTextToSize(noteText, CW - 4);
+    // Just show first line in box
+    doc.text(noteLines[0], ML + 2, y + 20);
+    y += 26;
+  }
+
+  // ── PAGE HEADER ──────────────────────────────────────────────
+  function drawPageHeader(isFirst) {
+    if (!isFirst) {
+      // Mini header for continuation pages
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Truth in Sale of Housing Disclosure Report", ML, y + 8);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text("Address:  " + address, ML, y + 14);
+      y += 18;
+      doc.setDrawColor(180, 180, 180);
+      doc.setLineWidth(0.3);
+      doc.line(ML, y, W - MR, y);
+      y += 6;
+      drawLegendBox();
+    }
+  }
+
+  // ── PAGE FOOTER ──────────────────────────────────────────────
+  function drawFooter(pageNum, totalPages) {
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.3);
+    doc.line(ML, H - 16, W - MR, H - 16);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Evaluator Name:", ML, H - 11);
+    doc.setFont("helvetica", "normal");
+    doc.text(evalName, ML + 28, H - 11);
+    doc.setFont("helvetica", "bold");
+    doc.text("Evaluation Date:", W / 2 - 20, H - 11);
+    doc.setFont("helvetica", "normal");
+    doc.text(evalDate, W / 2 + 12, H - 11);
+    doc.setFont("helvetica", "normal");
+    doc.text("Page " + pageNum + " of " + totalPages, W - MR, H - 11, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    doc.text("Evaluation #:  " + evalNum, ML, H - 6);
+    doc.setFontSize(7);
+    doc.setTextColor(100, 100, 100);
+    doc.text("*Disclaimer:  Not viewed in operation. Data collected is for CEE purposes only.", W / 2, H - 6, { align: "center" });
+  }
+
+  function addPage() {
+    doc.addPage();
+    y = 14;
+    drawPageHeader(false);
+  }
+
+  function checkY(needed) {
+    if (y + needed > H - 22) addPage();
+  }
+
+  // ══════════════════════════════════════
+  // PAGE 1 — COVER
+  // ══════════════════════════════════════
+  y = 14;
+
+  // Title
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(0, 0, 0);
+  doc.text("Truth in Sale of Housing Disclosure Report", ML, y);
+  y += 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(60, 60, 60);
+  doc.text("NOTICE - Read Entire Report Carefully. This is not a rental license inspection or a buyer's inspection!", ML, y);
+  y += 5;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  doc.text("Address:  ", ML, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(address, ML + 18, y);
+  y += 2;
+
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.3);
+  doc.line(ML, y, W - MR, y);
+  y += 5;
+
+  // Owner info two-column
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.text("Current Owner Name:", ML, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(ownerName, ML + 36, y);
+  doc.setFont("helvetica", "bold");
+  doc.text("Contact:", W / 2 + 5, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(ownerName, W / 2 + 20, y);
+  y += 5;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Owner Address:", ML, y);
+  doc.setFont("helvetica", "normal");
+  var addrLines = doc.splitTextToSize(ownerAddress, 60);
+  addrLines.forEach(function(line, i) { doc.text(line, ML + 28, y + i * 4.5); });
+  doc.setFont("helvetica", "bold");
+  doc.text("Business/Relationship:", W / 2 + 5, y);
+  y += 4.5 * Math.max(addrLines.length, 1);
+  doc.setFont("helvetica", "bold");
+  doc.text("Phone Number:", W / 2 + 5, y);
+  y += 5;
+
+  doc.line(ML, y, W - MR, y);
+  y += 5;
+
+  // Centered notices
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text("******* SEE ATTACHED PAGES FOR IMPORTANT CONSUMER INFORMATION *******", W / 2, y, { align: "center" });
+  y += 5;
+
+  // Check if any RR items exist
+  var hasRR = false;
+  categories.forEach(function(cat) {
+    rooms[cat.id].forEach(function(room) {
+      if (room.na) return;
+      cat.items.forEach(function(item) {
+        var s = room.itemStates[item.id];
+        if (s.conditions.some(function(c, i) { return c.checked && ["B","RRE","RRP","LIC"].indexOf(item.conditions[i].code) >= 0; })) hasRR = true;
+      });
+    });
+  });
+
+  if (hasRR) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("THERE ARE REQUIRED REPAIR/REPLACE ITEMS NOTED IN THIS REPORT.", W / 2, y, { align: "center" });
+  } else {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("THERE ARE NO REQUIRED REPAIR/REPLACE ITEMS IN THIS REPORT.", W / 2, y, { align: "center" });
+  }
+  y += 6;
+
+  // Property details
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+  doc.text("Observed Number of Units:", ML, y);
+  doc.setFont("helvetica", "normal"); doc.text(units, ML + 44, y);
+  doc.setFont("helvetica", "bold"); doc.text("City Reference as:", W / 2, y);
+  doc.setFont("helvetica", "normal"); doc.text(units, W / 2 + 33, y);
+  y += 5;
+
+  doc.setFont("helvetica", "bold"); doc.text("Building Type:", ML, y);
+  doc.setFont("helvetica", "normal"); doc.text(bldgType, ML + 25, y);
+  doc.setFont("helvetica", "bold"); doc.text("Zoning:", W / 2, y);
+  doc.setFont("helvetica", "normal"); doc.text(zoning, W / 2 + 15, y);
+  y += 5;
+
+  doc.setFont("helvetica", "bold"); doc.text("Local Historic Designation:", ML, y);
+  doc.setFont("helvetica", "normal"); doc.text("No", ML + 46, y);
+  y += 5;
+
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+  doc.text("To verify this structure complies with the current Zoning ordinance, please contact Zoning Administration via 311.", ML, y);
+  y += 5;
+
+  doc.line(ML, y, W - MR, y); y += 4;
+  doc.setFont("helvetica", "bold"); doc.text("Housing Orders:", ML, y);
+  doc.setFont("helvetica", "normal"); doc.text("No", ML + 29, y);
+  y += 5;
+
+  doc.setFont("helvetica", "bold"); doc.text("Condemnation Status:", ML, y);
+  doc.setFont("helvetica", "normal"); doc.text("NA", ML + 37, y);
+  doc.setFont("helvetica", "bold"); doc.text("Reason:", W / 2, y);
+  doc.setFont("helvetica", "normal"); doc.text("NA", W / 2 + 14, y);
+  y += 5;
+  doc.line(ML, y, W - MR, y); y += 4;
+
+  // Numbered boilerplate items
+  var notices = [
+    "This report gives a basic overview of the home's visible parts and fixtures. It is not a detailed or technical inspection. Buyers may want to hire other inspectors or specialists before buying. This report is not a warranty or guarantee from the City of Minneapolis or the inspector.",
+    "The buyer is responsible for fixing all items marked Repair/Replace, unless the seller agrees to fix them. The seller does not have to complete these repairs if the home does not sell. Items marked Repair/Replace are required by Minneapolis law and can be enforced by the city. Other notes in the report are informational only and are not enforced.",
+    "Minneapolis law requires sellers to get this Evaluation Report before showing a home for sale. The seller or agent must display the report at the property whenever it is shown. A copy of the report must be given to the buyer before a purchase agreement is signed.",
+    "This report only covers the items listed on the form. The inspector is not required to turn on the furnace, climb on the roof, inspect hidden areas, or take things apart. The report does not test for lead paint, formaldehyde, radon, asbestos, airborne gases, wood stoves, fireplaces, or air conditioners. Gas fireplace inserts are inspected.",
+    "This is not an FHA, VA, Section 8, rental, code-compliance inspection, or an appraisal. Lenders or government programs may have different requirements. If the home will be rented out, additional inspections and a rental license may be required.",
+    "The seller is required to provide the disclosure information for the boxes above. If the seller cannot provide this, buyers are advised to call 311 or 612-673-3000.",
+    "This report is valid for two years from the issue date or for one sale, whichever comes first. It only applies to the owner named on the report.",
+    "Questions about the inspection should be directed to the inspector listed on the report. Complaints should be sent to Minneapolis Truth in Housing at (612) 673-5840, Construction Code Services, 505 S. 4th Street #320, Minneapolis, MN 55415."
+  ];
+
+  doc.setFontSize(7.5);
+  notices.forEach(function(notice, i) {
+    var lines = doc.splitTextToSize((i + 1) + ".  " + notice, CW - 6);
+    checkY(lines.length * 4 + 2);
+    lines.forEach(function(line, li) {
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0);
+      doc.text(line, ML + (li === 0 ? 0 : 5), y);
+      y += 3.8;
+    });
+    y += 1;
+  });
+
+  y += 4;
+  checkY(35);
+
+  // Certification box
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.3);
+  doc.rect(ML, y, CW, 32, "S");
+  y += 4;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  var certText = "I hereby certify that this report is made in compliance with the Minneapolis Code of Ordinances, Chapter 248, and that I utilized care and diligence reasonable and ordinary for one meeting the Certification Standards. The report covers only those problems listed and reasonably visible at the time of my evaluation and does not warrant future useful life of any house component or fixture. I have included all required information pages with this report.";
+  var certLines = doc.splitTextToSize(certText, CW - 8);
+  certLines.forEach(function(line) { doc.text(line, ML + 4, y); y += 4; });
+  y += 3;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+  doc.text("Evaluator Name:", ML + 4, y);
+  doc.setFont("helvetica", "normal"); doc.text(evalName, ML + 30, y);
+  doc.setFont("helvetica", "bold"); doc.text("Phone:", ML + 95, y);
+  doc.setFont("helvetica", "normal"); doc.text(evalPhone, ML + 107, y);
+  doc.setFont("helvetica", "bold"); doc.text("Evaluation Date:", ML + 135, y);
+  doc.setFont("helvetica", "normal"); doc.text(evalDate, ML + 162, y);
+  y += 5;
+
+  doc.setFont("helvetica", "bold"); doc.text("Signature:", ML + 4, y);
+  doc.setFont("helvetica", "italic"); doc.text(evalName, ML + 20, y);
+  doc.setFont("helvetica", "bold"); doc.setFont("helvetica", "normal"); 
+  doc.setFont("helvetica", "bold"); doc.text("Evaluation #:", ML + 135, y);
+  doc.setFont("helvetica", "normal"); doc.text(evalNum, ML + 162, y);
+  y += 8;
+
+  drawFooter(1, "??");
+
+  // ══════════════════════════════════════
+  // CONTENT PAGES — one per category
+  // ══════════════════════════════════════
+  categories.forEach(function(cat) {
+    rooms[cat.id].forEach(function(room, ri) {
+      var roomLabel = rooms[cat.id].length > 1 ? (" (" + (room.label || ("Room " + (ri + 1))) + ")") : "";
+
+      // Check if this room has anything filled in
+      var hasContent = room.na;
+      if (!hasContent) {
+        cat.items.forEach(function(item) {
+          var s = room.itemStates[item.id];
+          if (s.meetsReq || s.conditions.some(function(c) { return c.checked; })) hasContent = true;
+        });
+      }
+      if (!hasContent) return;
+
+      // Start new page
+      doc.addPage();
+      y = 14;
+      drawPageHeader(false);
+
+      // Category heading
+      checkY(10);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(cat.name + roomLabel, ML, y);
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.4);
+      doc.line(ML, y + 1.5, W - MR, y + 1.5);
+      y += 7;
+
+      // Extra fields (Amps/Volts)
+      if (cat.extraFields && room.extraData) {
+        cat.extraFields.forEach(function(field) {
+          var val = room.extraData[field.key] || "";
+          if (val) {
+            checkY(7);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.text(field.label + ":", ML + 4, y);
+            doc.setFont("helvetica", "normal");
+            doc.text(val, ML + 4 + field.label.length * 2.5 + 4, y);
+            y += 5;
+          }
+        });
+      }
+
+      if (room.na) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text("Not Applicable", ML + 8, y);
+        y += 6;
+        return;
+      }
+
+      // Items
+      cat.items.forEach(function(item, idx) {
+        var s = room.itemStates[item.id];
+        var hasAny = s.meetsReq || s.conditions.some(function(c) { return c.checked; });
+        if (!hasAny) return;
+
+        checkY(10);
+
+        // Item number and name
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        doc.text((idx + 1) + ".  " + item.name, ML + 4, y);
+        y += 5;
+
+        // Meets requirements
+        if (s.meetsReq) {
+          checkY(6);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.text("M, Meets Minimum Requirements", ML + 16, y);
+          y += 5;
+        }
+
+        // Checked conditions
+        s.conditions.forEach(function(cst, ci) {
+          if (!cst.checked) return;
+          var cond = item.conditions[ci];
+          checkY(7);
+          var condLine = cond.code + ", " + cond.text + (cst.comment ? " - " + cst.comment : "");
+          var wrapped = doc.splitTextToSize(condLine, CW - 20);
+          wrapped.forEach(function(line, li) {
+            if (li > 0) checkY(5);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.text(line, ML + 16, y);
+            y += 4.5;
+          });
+        });
+      });
+
+      y += 2;
+    });
+  });
+
+  // ── ADD FOOTERS TO ALL PAGES ──────────────────────────────
+  var totalPages = doc.internal.getNumberOfPages();
+  for (var p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    drawFooter(p, totalPages);
+  }
+
+  var safe = address.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 30);
+  
+  // iOS Safari compatible - open as data URL in new tab
+  try {
+    var pdfData = doc.output("datauristring");
+    var newTab = window.open();
+    if (newTab) {
+      newTab.document.write(
+        "<html><head><title>TISH Report</title></head><body style='margin:0;padding:0;'>" +
+        "<iframe src='" + pdfData + "' width='100%' height='100%' style='border:none;position:fixed;top:0;left:0;'></iframe>" +
+        "</body></html>"
+      );
+      newTab.document.close();
+    } else {
+      // Fallback: direct data URL
+      window.location.href = pdfData;
+    }
+  } catch(e) {
+    alert("Error generating PDF: " + e.message);
+  }
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+renderMain();
+</script>
+</body>
+</html>
