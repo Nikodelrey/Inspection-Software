@@ -597,10 +597,10 @@ body {
   <div class="setup-head">Confirm Owner Information</div>
   <div class="setup-body">
     <div class="prop-box">
-      <label for="fi-address"><span class="req-star">*</span> Property Address</label>
-      <input id="fi-address" class="fld-in" type="text" placeholder="e.g. 1317 Monroe St NE" autocomplete="off">
+      <label for="fi-address"><span class="req-star">*</span> Property Address<div style="font-weight:normal;font-size:11px;color:#777;">house being inspected</div></label>
+      <input id="fi-address" name="insp_site_ref" class="fld-in" type="text" placeholder="e.g. 1317 Monroe St NE" autocomplete="off" autocorrect="off" spellcheck="false">
       <label for="fi-zoning">Zoning</label>
-      <input id="fi-zoning" class="fld-in" type="text" placeholder="e.g. UN2" style="max-width:160px;" autocomplete="off">
+      <input id="fi-zoning" name="insp_zone_ref" class="fld-in" type="text" placeholder="e.g. UN2" style="max-width:160px;" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="q-row">Does the owner reside at the address above?
       <label><input type="radio" name="ownerResides" value="Yes"> Yes</label>
@@ -659,11 +659,12 @@ body {
 <div id="screen-report" style="display:none;">
   <div class="no-print" style="background:#eef3f9;border-bottom:1px solid #cdd9e6;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;">
     <button class="btn-cancel" onclick="closeReport()">Back</button>
-    <button class="btn-pdf-top" style="font-size:14px;padding:9px 16px;" onclick="window.print()">Print / Save as PDF</button>
-    <button class="btn-save" onclick="runXMLOnly()">Download XML</button>
+    <button class="btn-pdf-top" style="font-size:14px;padding:9px 16px;" onclick="runPDFDownload()">Save PDF</button>
+    <button class="btn-save" onclick="runXMLOnly()">Save XML</button>
+    <button class="btn-save" style="background:#8a9bb0;" onclick="window.print()">Print</button>
   </div>
   <div class="no-print" style="padding:8px 14px;font-size:12px;line-height:1.5;background:#fff8dc;border-bottom:1px solid #eee2b0;">
-    <b>To save the PDF:</b> tap <b>Print / Save as PDF</b>, then tap the <b>Share</b> button at the top of the print screen and choose <b>Save to Files</b>.
+    <b>Save PDF</b> and <b>Save XML</b> download the files. If Safari asks, tap <b>Download</b>. They go to <b>Files &rarr; Downloads</b>. This page is a preview.
   </div>
   <div id="reportBody"></div>
 </div>
@@ -3751,7 +3752,8 @@ function renderUnitTabs() {
 function renderSummary() {
   var box = document.getElementById("summaryBox");
   box.innerHTML = "";
-  var addr = (document.getElementById("fi-address").value || "").trim();
+  syncGuarded();
+  var addr = (GUARDED["fi-address"] || "").trim();
   var t = document.createElement("div");
   t.className = "sum-title";
   t.textContent = addr ? "Report: " + addr.toUpperCase() : "New inspection";
@@ -3803,7 +3805,7 @@ function renderSummary() {
   row("Observed Units:", String(units.length));
   if (units.length > 1) row("Numbers/Labels:", units.map(function(u, i) { return unitName(i); }).join(", "));
   row("Number of Stories:", document.getElementById("fi-stories").value);
-  row("Zoning:", document.getElementById("fi-zoning").value);
+  row("Zoning:", GUARDED["fi-zoning"]);
   dw.appendChild(kv);
 
   box.appendChild(wrap);
@@ -3820,6 +3822,7 @@ var PHONE_TYPES = ["Cell Phone", "Home Phone", "Work Phone", "Other"];
 
 function showOwner(mode) {
   flowMode = mode;
+  syncGuarded();
   document.querySelectorAll("input[name=ownerResides]").forEach(function(r) { r.checked = (r.value === info.ownerResides); });
   renderPersons();
   showScreen("screen-owner");
@@ -3849,7 +3852,7 @@ function renderPersons() {
     h += '<label><span class="req-star">*</span> First Name</label>' + inp("first", 'data-req="1" autocomplete="off"');
     h += '<label><span class="req-star">*</span> Last Name</label>' + inp("last", 'data-req="1" autocomplete="off"');
     h += '<label>Business or Relationship</label><div>' + inp("biz", 'autocomplete="off"') + '<div style="font-size:12px;color:#666;margin-top:2px;">(i.e. Bank, Power of Attorney, Executor)</div></div>';
-    h += '<label><span class="req-star">*</span> Address</label>' + inp("addr", 'data-req="1" autocomplete="off"');
+    h += '<label><span class="req-star">*</span> Owner Address<div style="font-weight:normal;font-size:11px;color:#777;">owner&#39;s mailing address</div></label>' + inp("addr", 'data-req="1" autocomplete="off"');
     h += '<label><span class="req-star">*</span> City</label>' + inp("city", 'data-req="1" autocomplete="off"');
     h += '<label><span class="req-star">*</span> State</label><div class="phone-row">' + sel("state", US_STATES, "- Select -") +
          ' <span style="font-size:13px;font-weight:bold;color:#556;"><span class="req-star">*</span> Zip Code</span> ' + inp("zip", 'data-req="1" inputmode="numeric" maxlength="10" style="width:110px;"') + '</div>';
@@ -3891,7 +3894,7 @@ function ownerResidesChanged(v) {
   info.ownerResides = v;
   var p = primaryPerson();
   if (v === "Yes" && !p.addr) {
-    p.addr = document.getElementById("fi-address").value;
+    p.addr = GUARDED["fi-address"];
     if (!p.city) p.city = "Minneapolis";
     if (!p.state) p.state = "MN";
     renderPersons();
@@ -3901,8 +3904,9 @@ function ownerResidesChanged(v) {
 function ownerNext() {
   var missing = false;
   var a = document.getElementById("fi-address");
-  a.classList.toggle("req-empty", !a.value.trim());
-  if (!a.value.trim()) missing = true;
+  syncGuarded();
+  a.classList.toggle("req-empty", !GUARDED["fi-address"].trim());
+  if (!GUARDED["fi-address"].trim()) missing = true;
   var p = primaryPerson(), pi = info.persons.indexOf(p);
   ["first", "last", "addr", "city", "state", "zip", "p1num"].forEach(function(k) {
     var el = document.querySelector('#personsBox [data-i="' + pi + '"][data-k="' + k + '"]');
@@ -3919,7 +3923,7 @@ function showDwelling(mode) {
   flowMode = mode;
   var pb = document.getElementById("dwPropBox");
   pb.innerHTML = "";
-  [["Property Address", document.getElementById("fi-address").value], ["Zoning", document.getElementById("fi-zoning").value]].forEach(function(kv) {
+  [["Property Address", GUARDED["fi-address"]], ["Zoning", GUARDED["fi-zoning"]]].forEach(function(kv) {
     var l = document.createElement("label"); l.textContent = kv[0];
     var v = document.createElement("div"); v.textContent = kv[1] || "\u2014"; v.style.fontSize = "14px";
     pb.appendChild(l); pb.appendChild(v);
@@ -4492,7 +4496,7 @@ function joinComment(text, comment) {
 
 function generatePDF() {
   if (typeof saveNow === "function") saveNow();
-  var address = document.getElementById("fi-address").value || "[Address not entered]";
+  var address = GUARDED["fi-address"] || "[Address not entered]";
   var rawDate = document.getElementById("fi-date").value || "";
   var evalDate = rawDate ? (function(d){ var p=d.split("-"); return p[1]+"/"+p[2]+"/"+p[0]; })(rawDate) : new Date().toLocaleDateString();
   var evalName = document.getElementById("fi-evalname").value || "";
@@ -4505,7 +4509,7 @@ function generatePDF() {
   var contact = esc([personName(pp), personPhone(pp, 1)].filter(Boolean).join(", "));
   var unitCount = String(units.length) + (units.length > 1 ? " (" + esc(units.map(function(u, i) { return unitName(i); }).join(", ")) + ")" : "");
   var bldgType = esc(document.getElementById("fi-bldgtype").value);
-  var zoning = esc(document.getElementById("fi-zoning").value);
+  var zoning = esc(GUARDED["fi-zoning"]);
   var stories = esc(document.getElementById("fi-stories").value);
   address = esc(address);
 
@@ -4699,6 +4703,385 @@ function buildRepairNotification(address, evalName, evalDate, esc) {
   return h;
 }
 
+// =======================================
+// REAL PDF FILE (downloads like the XML; no print screen needed)
+// Small built-in PDF writer using the standard Helvetica fonts.
+// =======================================
+var HELV_W = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+var HELVB_W = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+var WIN_ANSI = { 8216:145, 8217:146, 8220:147, 8221:148, 8226:149, 8211:150, 8212:151, 8230:133, 8482:153, 8364:128 };
+
+function pdfByte(ch) {
+  var c = ch.charCodeAt(0);
+  if (c < 128 || (c >= 160 && c <= 255)) return c;
+  return WIN_ANSI[c] || 63;
+}
+function pdfStr(s) {
+  var out = "";
+  String(s == null ? "" : s).replace(/[\r\n\t]+/g, " ").split("").forEach(function(ch) {
+    var b = pdfByte(ch);
+    if (b === 40 || b === 41 || b === 92) out += "\\" + String.fromCharCode(b);
+    else if (b < 32 || b > 126) out += "\\" + ("00" + b.toString(8)).slice(-3);
+    else out += String.fromCharCode(b);
+  });
+  return "(" + out + ")";
+}
+function textWidth(s, bold, size) {
+  var w = 0, tbl = bold ? HELVB_W : HELV_W;
+  String(s).split("").forEach(function(ch) {
+    var c = ch.charCodeAt(0);
+    w += (c >= 32 && c <= 126) ? tbl[c - 32] : 556;
+  });
+  return w * size / 1000;
+}
+
+function PdfDoc(opts) {
+  this.W = 612; this.H = 792; this.L = 40; this.R = 572;
+  this.TOP = 728; this.BOTTOM = 56;
+  this.opts = opts;
+  this.pages = [];
+  this.newPage();
+}
+PdfDoc.prototype.newPage = function() {
+  this.cur = [];
+  this.pages.push(this.cur);
+  // running header
+  this.text(this.L, 766, "Truth in Sale of Housing Disclosure Report", "B", 13);
+  this.text(this.L, 752, "Address:", "B", 9);
+  this.text(this.L + 42, 752, this.opts.address, "R", 9);
+  this.y = this.TOP;
+};
+PdfDoc.prototype.font = function(f) { return f === "B" ? "F2" : (f === "I" ? "F3" : "F1"); };
+PdfDoc.prototype.text = function(x, y, s, f, size) {
+  this.cur.push("BT /" + this.font(f) + " " + size + " Tf " + x.toFixed(2) + " " + y.toFixed(2) + " Td " + pdfStr(s) + " Tj ET");
+};
+PdfDoc.prototype.hline = function(x1, x2, y, w) {
+  this.cur.push((w || 0.5) + " w " + x1 + " " + y.toFixed(2) + " m " + x2 + " " + y.toFixed(2) + " l S");
+};
+PdfDoc.prototype.box = function(x, y, w, h, fillGray) {
+  if (fillGray != null) this.cur.push(fillGray + " g " + x + " " + y.toFixed(2) + " " + w + " " + h.toFixed(2) + " re f 0 g");
+  else this.cur.push("0.6 G 0.5 w " + x + " " + y.toFixed(2) + " " + w + " " + h.toFixed(2) + " re S 0 G");
+};
+PdfDoc.prototype.need = function(h) { if (this.y - h < this.BOTTOM) this.newPage(); };
+PdfDoc.prototype.wrap = function(s, bold, size, maxW) {
+  var words = String(s == null ? "" : s).replace(/\s+/g, " ").trim().split(" "), lines = [], line = "";
+  if (!words[0]) return [""];
+  words.forEach(function(wd) {
+    var test = line ? line + " " + wd : wd;
+    if (textWidth(test, bold, size) <= maxW) { line = test; return; }
+    if (line) lines.push(line);
+    // break very long words
+    while (textWidth(wd, bold, size) > maxW) {
+      var k = wd.length;
+      while (k > 1 && textWidth(wd.slice(0, k), bold, size) > maxW) k--;
+      lines.push(wd.slice(0, k)); wd = wd.slice(k);
+    }
+    line = wd;
+  });
+  if (line) lines.push(line);
+  return lines;
+};
+// Paragraph; returns nothing, moves the cursor down
+PdfDoc.prototype.para = function(s, f, size, x, maxW, lead, align) {
+  var self = this, bold = f === "B";
+  lead = lead || size * 1.3;
+  this.wrap(s, bold, size, maxW).forEach(function(ln) {
+    self.need(lead);
+    var tx = x;
+    if (align === "center") tx = x + (maxW - textWidth(ln, bold, size)) / 2;
+    if (align === "right") tx = x + maxW - textWidth(ln, bold, size);
+    self.text(tx, self.y - size, ln, f, size);
+    self.y -= lead;
+  });
+};
+// "Label: value" on one line, value wrapped after the label
+PdfDoc.prototype.kv = function(label, value, x, maxW, size) {
+  size = size || 9;
+  var lw = textWidth(label + " ", true, size);
+  var lines = this.wrap(value, false, size, maxW - lw);
+  var self = this, lead = size * 1.3;
+  lines.forEach(function(ln, i) {
+    self.need(lead);
+    if (!i) self.text(x, self.y - size, label, "B", size);
+    self.text(x + lw, self.y - size, ln, "R", size);
+    self.y -= lead;
+  });
+};
+PdfDoc.prototype.table = function(cols, rows, size) {
+  var self = this, lead = size * 1.25;
+  function header() {
+    self.need(lead + 4);
+    var x = self.L;
+    cols.forEach(function(c) { self.text(x + 2, self.y - size, c.title, "B", size); x += c.w; });
+    self.y -= lead + 2;
+    self.hline(self.L, self.R, self.y + 1, 0.7);
+    self.y -= 3;
+  }
+  header();
+  rows.forEach(function(r) {
+    var cells = cols.map(function(c, i) { return self.wrap(r[i], false, size, c.w - 6); });
+    var n = Math.max.apply(null, cells.map(function(l) { return l.length; }));
+    var h = n * lead + 3;
+    if (self.y - h < self.BOTTOM) { self.newPage(); header(); }
+    var x = self.L;
+    cells.forEach(function(lines, ci) {
+      lines.forEach(function(ln, li) { self.text(x + 2, self.y - size - li * lead, ln, "R", size); });
+      x += cols[ci].w;
+    });
+    self.y -= h;
+  });
+};
+PdfDoc.prototype.gap = function(h) { this.y -= h; };
+PdfDoc.prototype.pageBreak = function() { this.newPage(); };
+
+PdfDoc.prototype.bytes = function() {
+  var self = this, total = this.pages.length;
+  // running footer with page numbers
+  this.pages.forEach(function(p, i) {
+    self.cur = p;
+    self.hline(self.L, self.R, 44, 0.5);
+    self.text(self.L, 32, "Evaluator Name:", "B", 8);
+    self.text(self.L + 66, 32, self.opts.evalName, "R", 8);
+    self.text(250, 32, "Evaluation Date:", "B", 8);
+    self.text(318, 32, self.opts.evalDate, "R", 8);
+    var pg = "Page " + (i + 1) + " of " + total;
+    self.text(self.R - textWidth(pg, false, 8), 32, pg, "R", 8);
+  });
+
+  var objs = [];
+  objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+  objs[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+  objs[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+  objs[5] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>";
+  var kids = [];
+  this.pages.forEach(function(p, i) {
+    var cid = 6 + i * 2, pid = 7 + i * 2;
+    var stream = p.join("\n");
+    objs[cid] = "<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream";
+    objs[pid] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + self.W + " " + self.H + "] " +
+                "/Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents " + cid + " 0 R >>";
+    kids.push(pid + " 0 R");
+  });
+  objs[2] = "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + total + " >>";
+
+  var out = "%PDF-1.4\n", offs = [];
+  for (var n = 1; n < objs.length; n++) {
+    offs[n] = out.length;
+    out += n + " 0 obj\n" + objs[n] + "\nendobj\n";
+  }
+  var xref = out.length;
+  out += "xref\n0 " + objs.length + "\n0000000000 65535 f \n";
+  for (n = 1; n < objs.length; n++) out += ("0000000000" + offs[n]).slice(-10) + " 00000 n \n";
+  out += "trailer\n<< /Size " + objs.length + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF";
+  var bytes = new Uint8Array(out.length);
+  for (var k = 0; k < out.length; k++) bytes[k] = out.charCodeAt(k) & 255;
+  return bytes;
+};
+
+function plainJoin(text, comment) {
+  var c = String(comment || "").trim();
+  if (!c) return text;
+  return /:\s*$/.test(text) ? text.replace(/\s*$/, "") + " " + c : text + " - " + c;
+}
+
+function buildReportPDF() {
+  var f = getFormInfo();
+  var rawDate = f.date || "";
+  var evalDate = rawDate ? (function(d) { var p = d.split("-"); return p[1] + "/" + p[2] + "/" + p[0]; })(rawDate) : new Date().toLocaleDateString();
+  var address = f.address || "[Address not entered]";
+  var pp = primaryPerson();
+  var doc = new PdfDoc({ address: address, evalName: f.evalName, evalDate: evalDate });
+  var L = doc.L, W = doc.R - doc.L;
+
+  doc.para("NOTICE - Read Entire Report Carefully. This is not a rental license inspection or a buyers inspection!", "I", 8, L, W);
+  doc.gap(4); doc.hline(L, doc.R, doc.y + 2); doc.gap(4);
+  var startY = doc.y;
+  doc.kv("Current Owner Name:", personName(pp) + (pp.biz ? " (" + pp.biz + ")" : ""), L, W / 2 - 10);
+  doc.kv("Owner Address:", personAddress(pp), L, W / 2 - 10);
+  var leftEnd = doc.y; doc.y = startY;
+  doc.kv("Contact:", [personName(pp), personPhone(pp, 1)].filter(Boolean).join(", "), L + W / 2, W / 2);
+  doc.kv("Evaluation Date:", evalDate, L + W / 2, W / 2);
+  doc.y = Math.min(doc.y, leftEnd);
+  doc.gap(4); doc.hline(L, doc.R, doc.y + 2); doc.gap(6);
+
+  var hasRR = false;
+  units.forEach(function(u) {
+    categories.forEach(function(cat) {
+      u.rooms[cat.id].forEach(function(room) {
+        if (room.na) return;
+        cat.items.forEach(function(item) { if (itemHasRequired(item, room.itemStates[item.id])) hasRR = true; });
+      });
+    });
+  });
+  doc.para(hasRR ? "THERE ARE REQUIRED REPAIR/REPLACE ITEMS NOTED IN THIS REPORT." : "THERE ARE NO REQUIRED REPAIR/REPLACE ITEMS IN THIS REPORT.", "B", 10, L, W, 14, "center");
+  doc.gap(2);
+  var unitTxt = String(units.length) + (units.length > 1 ? " (" + units.map(function(u, i) { return unitName(i); }).join(", ") + ")" : "");
+  startY = doc.y;
+  doc.kv("Observed Number of Units:", unitTxt, L, W / 2 - 10);
+  leftEnd = doc.y; doc.y = startY;
+  doc.kv("Building Type:", f.bldgType, L + W / 2, W / 4 + 20);
+  doc.y = startY;
+  doc.kv("Zoning:", f.zoning, L + W * 0.77, W * 0.23);
+  doc.y = Math.min(doc.y, leftEnd) ;
+  doc.kv("Number of Stories:", f.stories, L, W / 2);
+  doc.gap(4);
+
+  // codes box
+  var codes1 = "M=Meets Requirements   C=Comments   NA=Not Applicable   B=Below Minimum Requirements   SC=Suggested Correction";
+  var codes2 = "RRE=Repair/Replace, Evaluator Verification Required   RRP=Repair/Replace, Permit Required   LIC=Safety Check, Licensed Contractor Required";
+  doc.need(40);
+  doc.box(L, doc.y - 34, W, 34, 0.95);
+  doc.box(L, doc.y - 34, W, 34);
+  doc.text(L + 5, doc.y - 10, "EVALUATION CODES:", "B", 7.5);
+  doc.text(L + 5, doc.y - 20, codes1, "R", 7);
+  doc.text(L + 5, doc.y - 29, codes2, "R", 7);
+  doc.gap(42);
+
+  units.forEach(function(u, ui) {
+    if (units.length > 1) {
+      doc.need(30);
+      doc.box(L, doc.y - 16, W, 16, 0.88);
+      doc.text(L + 5, doc.y - 12, "UNIT: " + unitName(ui), "B", 10);
+      doc.gap(22);
+    }
+    categories.forEach(function(cat) {
+      var list = u.rooms[cat.id];
+      list.forEach(function(room, ri) {
+        var has = room.na || Object.keys(room.itemStates).some(function(k) {
+          var st = room.itemStates[k];
+          return st.meetsReq || st.conditions.some(function(c) { return c.checked; });
+        }) || Object.keys(room.extraData || {}).some(function(k) { return room.extraData[k]; });
+        if (!has) return;
+        var title = cat.name + (list.length > 1 ? " (" + (room.label || ("Room " + (ri + 1))) + ")" : (room.label ? " (" + room.label + ")" : ""));
+        doc.need(40);
+        doc.gap(4);
+        doc.text(L, doc.y - 10, title, "B", 10);
+        doc.gap(13);
+        doc.hline(L, doc.R, doc.y, 1);
+        doc.gap(4);
+        if (cat.extraFields) {
+          cat.extraFields.forEach(function(fd) {
+            var v = room.extraData[fd.key];
+            if (v) doc.kv(fd.label.replace(/:$/, "") + ":", v, L + 4, W - 4, 8.5);
+          });
+        }
+        if (room.na) { doc.para("Not Applicable", "R", 8.5, L + 22, W - 22); return; }
+        var area = room.itemStates[AREA_ID];
+        if (area && area.conditions.some(function(c) { return c.checked; })) {
+          doc.para("General Area", "R", 9, L + 8, W - 8, 12);
+          area.conditions.forEach(function(cst, ci) {
+            if (cst.checked) doc.para(plainJoin(cat.areaConditions[ci].text, cst.comment), "R", 8.5, L + 22, W - 22, 11);
+          });
+        }
+        cat.items.forEach(function(item, idx) {
+          var s = room.itemStates[item.id];
+          if (!(s.meetsReq || s.conditions.some(function(c) { return c.checked; }))) return;
+          doc.need(24);
+          doc.para(((cat.itemStartIndex || 1) + idx) + ". " + item.name, "R", 9, L + 8, W - 8, 12);
+          if (s.meetsReq) doc.para("M, Meets Minimum Requirements", "R", 8.5, L + 22, W - 22, 11);
+          s.conditions.forEach(function(cst, ci) {
+            if (!cst.checked) return;
+            var cond = item.conditions[ci];
+            doc.para(cond.code + ", " + plainJoin(cond.text, cst.comment), isRequired(cond.code) ? "B" : "R", 8.5, L + 22, W - 22, 11);
+          });
+          doc.gap(2);
+        });
+      });
+    });
+  });
+
+  // certification
+  doc.gap(8);
+  doc.need(64);
+  var top = doc.y;
+  doc.para("I hereby certify that this report is made in compliance with the Minneapolis Code of Ordinances, Chapter 248.", "R", 8, L + 6, W - 12);
+  doc.gap(2);
+  var sy = doc.y;
+  doc.kv("Evaluator Name:", f.evalName, L + 6, W / 3);
+  doc.kv("Signature:", f.evalName, L + 6, W / 3);
+  var sEnd = doc.y; doc.y = sy;
+  doc.kv("Phone:", f.evalPhone, L + W / 3 + 6, W / 3);
+  doc.kv("License #:", f.evalLic, L + W / 3 + 6, W / 3);
+  doc.y = sy;
+  doc.kv("Evaluation Date:", evalDate, L + 2 * W / 3, W / 3);
+  doc.y = Math.min(doc.y, sEnd) - 4;
+  doc.box(L, doc.y, W, top - doc.y);
+  doc.gap(10);
+  doc.para("City of Minneapolis - Truth in Sale of Housing - 250 South 4th Street, Room 300, Minneapolis, MN 55415 - 612-673-5840", "R", 7.5, L, W, 10, "center");
+
+  // ---------- Repair Notification ----------
+  var r = collectRepairs();
+  doc.pageBreak();
+  ["Truth in Housing Repair Notification", "City of Minneapolis - Truth in Sale of Housing", "250 South 4th Street, Room 300", "Minneapolis, MN 55415"].forEach(function(t, i) {
+    doc.para(t, i ? "R" : "B", i ? 10 : 11, L, W, 14, "center");
+  });
+  doc.gap(10);
+  var today = new Date();
+  var noticeDate = (today.getMonth() + 1) + "/" + today.getDate() + "/" + today.getFullYear();
+  doc.text(doc.R - textWidth(noticeDate, false, 10), doc.y - 10, noticeDate, "R", 10);
+  doc.para("Issued To:", "B", 10, L, 200, 14);
+  var cityLine = [pp.city, [pp.state, pp.zip].filter(Boolean).join("  ")].filter(Boolean).join(", ");
+  [personName(pp), pp.biz, pp.addr, cityLine].filter(Boolean).forEach(function(t) { doc.para(t, "R", 10, L + 40, W - 40, 13); });
+  doc.gap(8);
+  doc.para("Owner does not have to complete repairs if the house is not sold.", "R", 10, L, W, 14, "center");
+  doc.gap(4);
+  doc.para("Pursuant to Minneapolis Code of Ordinances, Sections 248.20 and 248.225, the owner may make the repairs. If the owner makes the repairs, a Certificate of Approval (needed for closing) will be issued after the repairs have been inspected and approved. The owner does not have to complete the repairs if the house does not sell. If the owner does not make the repairs, the buyer must sign an acknowledgement of responsibility form (provided by the City) and return it to the City. The buyer has 90 days from closing to complete the repairs. Your prompt cooperation in attending to the repair items is appreciated however, failure to comply by these deadlines may result in legal action.", "R", 8.5, L, W, 11);
+
+  var cols = [{ title: "ID", w: 34 }, { title: "Description", w: 128 }, { title: "Area", w: 140 }, { title: "Comment", w: W - 302 }];
+  function rows(list) { return list.map(function(x) { return [String(x.id), x.desc, x.area, x.comment]; }); }
+  function section(title, paras, list) {
+    doc.gap(10);
+    doc.need(40);
+    doc.para(title, "B", 10, L, W, 14);
+    paras.forEach(function(p) { doc.para(p, "R", 8.5, L, W, 11); doc.gap(3); });
+    if (list.length) doc.table(cols, rows(list), 8.5);
+    else doc.para("NONE", "B", 9.5, L, W, 14);
+  }
+  section("REQUIRED REPAIRS", [], r.RRE);
+  section("SAFETY CHECKS", [
+    "The systems listed below must be checked by a licensed contractor. The contractor must be licensed by the City of Minneapolis and/or the State of Minnesota in that specific trade to check the work. Return safety check forms to the address above or fax to (612) 673-2437. If \u201CEvaluator Return\u201D is indicated below, the evaluator may return to view the system that was not in operation at the time of the initial evaluation. The evaluator may find additional work is needed on the system.",
+    "If the system was repaired or replaced, only a licensed contractor (not the evaluator) can do the safety check. Permits may be needed."], r.LIC);
+  section("PERMIT REQUIRED REPAIR", [
+    "The permit must be pulled before scheduling. Call the inspector listed on the permit to set an appointment. You need to have the permit number to set the appointment. There will be a charge for the permit, which covers the inspection."], r.RRP);
+
+  [["Reinspection Process", "B", "When all the items are completed they must be inspected and approved."],
+   ["For items that need a permit:", "I", "If your notification indicates PERMIT NEEDED, the permit(s) must be pulled and work completed BEFORE the re-inspection takes place. If you are a homeowner occupant of a single family house, you may obtain a permit, if you are not, you must hire a licensed contractor. Bring this notification with you when you apply for permits."],
+   ["For items that do not need a permit:", "I", "Call the evaluator who did the initial TISH report to re-inspect all the non-permit items. The evaluator\u2019s name and phone number are on the bottom of page 1 of the report. There will be a charge for this inspection."],
+   ["Appeal", "B", "This repair notice may be appealed. Section 248.150 of the Minneapolis Code of Ordinances provides that an appeal must be filed in writing within thirty (30) days of the date of this notice accompanied with a $100 filing fee. If you wish to appeal this order, call (612) 673-5840 for an application."],
+   ["Assistance", "B", "If you need financial assistance to complete these repairs, you may call the Center for Energy and Environment at 612-335-5884."]
+  ].forEach(function(s) {
+    doc.gap(8);
+    doc.need(36);
+    doc.para(s[0], s[1] === "I" ? "B" : "B", 9.5, L, W, 13);
+    doc.para(s[2], "R", 8.5, L, W, 11);
+  });
+
+  return doc.bytes();
+}
+
+function pdfFileName() {
+  var f = getFormInfo();
+  var base = (f.address || "report").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "report";
+  return "Report_" + base + "_" + (f.date || new Date().toISOString().slice(0, 10)) + ".pdf";
+}
+
+function downloadPDF() {
+  if (typeof saveNow === "function") saveNow();
+  var blob = new Blob([buildReportPDF()], { type: "application/pdf" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = pdfFileName();
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 20000);
+}
+
+function runPDFDownload() {
+  try { downloadPDF(); } catch (e) { alert("PDF error: " + e.message); }
+}
+
 function closeReport() {
   document.title = "Inspection Report";
   showScreen("screen-form");
@@ -4723,7 +5106,7 @@ function xmlEsc(s) {
 function getFormInfo() {
   function v(id) { var el = document.getElementById(id); return el ? el.value : ""; }
   return {
-    address: v("fi-address"), evalName: v("fi-evalname"), evalPhone: v("fi-evalphone"),
+    address: GUARDED["fi-address"], evalName: v("fi-evalname"), evalPhone: v("fi-evalphone"),
     date: v("fi-date"), evalLic: v("fi-evallic"),
     units: String(units.length), bldgType: v("fi-bldgtype"), zoning: v("fi-zoning"), stories: v("fi-stories")
   };
@@ -4867,8 +5250,9 @@ function runXMLOnly() {
 
 // Runs directly in the tap handler so Safari allows both the report window and the download.
 function generateBoth() {
+  try { downloadPDF(); } catch (e) { alert("PDF error: " + e.message); }
   try { downloadXML(); } catch (e) { alert("XML error: " + e.message); }
-  try { generatePDF(); } catch (e) { alert("PDF error: " + e.message); }
+  try { generatePDF(); } catch (e) { alert("Preview error: " + e.message); }
 }
 
 
@@ -4973,15 +5357,40 @@ function setCurrentId(id) {
 }
 function newId() { return "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
+// Property Address and Zoning only change when you type in them yourself.
+// Safari AutoFill (picking a contact or address suggestion) can otherwise overwrite or blank them.
+var GUARDED = { "fi-address": "", "fi-zoning": "" };
+function guardField(id) {
+  var el = document.getElementById(id);
+  function check() {
+    if (document.activeElement === el) GUARDED[id] = el.value;   // you typing
+    else if (el.value !== GUARDED[id]) el.value = GUARDED[id];   // AutoFill or other change: undo
+  }
+  el.addEventListener("input", check, true);
+  el.addEventListener("change", check, true);
+  el.addEventListener("blur", function() { GUARDED[id] = el.value; });
+}
+function syncGuarded() {
+  Object.keys(GUARDED).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.value !== GUARDED[id]) el.value = GUARDED[id];
+  });
+}
+
 function readForm() {
   var f = {};
-  FORM_IDS.forEach(function(id) { var el = document.getElementById(id); f[id] = el ? el.value : ""; });
+  FORM_IDS.forEach(function(id) {
+    var el = document.getElementById(id);
+    f[id] = (id in GUARDED) ? GUARDED[id] : (el ? el.value : "");
+  });
   return f;
 }
 function writeForm(f) {
   FORM_IDS.forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.value = (f && f[id] != null) ? f[id] : (FORM_DEFAULTS[id] || "");
+    var v = (f && f[id] != null) ? f[id] : (FORM_DEFAULTS[id] || "");
+    if (id in GUARDED) GUARDED[id] = v;
+    if (el) el.value = v;
   });
 }
 function inspTitle(form) {
@@ -5272,6 +5681,9 @@ function importBackup(input) {
   };
   reader.readAsText(file);
 }
+
+guardField("fi-address");
+guardField("fi-zoning");
 
 // Owner screen fields
 document.getElementById("personsBox").addEventListener("input", function(e) { if (e.target.hasAttribute("data-k")) readPersonField(e.target); });
