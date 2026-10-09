@@ -395,8 +395,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 50;
 }
 
@@ -453,6 +452,12 @@ body {
 .finding-line b { color: #222; }
 .finding-line.req b { color: #cc3300; }
 .finding-comment { color: #444; }
+
+/* iOS zooms and shifts the page when a text box has text under 16px */
+input[type=text], input[type=tel], input[type=email], input[type=number], input[type=date],
+input:not([type]), select, textarea, .fld-in, .cond-comment-input, .label-input {
+  font-size: 16px !important;
+}
 
 /* Setup screens (owner / dwelling) */
 .setup-head { background:#1a2744; color:#fff; padding:12px 16px; font-size:17px; font-weight:bold; }
@@ -5684,6 +5689,26 @@ document.querySelectorAll("input[name=ownerResides]").forEach(function(r) {
   r.addEventListener("change", function() { if (r.checked) ownerResidesChanged(r.value); });
 });
 document.addEventListener("input", function(e) { if (e.target && EVAL_FIELDS[e.target.id]) saveEvaluatorProfile(); });
+
+// Keep the field being typed in visible above the on-screen keyboard
+(function keepFieldVisible() {
+  var vv = window.visualViewport;
+  function isTyping(el) {
+    return el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !/^(checkbox|radio|button|submit|file)$/.test(el.type)));
+  }
+  function adjust() {
+    var el = document.activeElement;
+    if (!isTyping(el)) return;
+    var r = el.getBoundingClientRect();
+    var top = vv ? vv.offsetTop : 0;
+    var h = vv ? vv.height : window.innerHeight;
+    if (r.top < top + 50 || r.bottom > top + h - 30) {
+      window.scrollBy(0, r.top - top - h * 0.3);
+    }
+  }
+  document.addEventListener("focusin", function(e) { if (isTyping(e.target)) setTimeout(adjust, 350); });
+  if (vv) vv.addEventListener("resize", function() { setTimeout(adjust, 50); });
+})();
 
 // Save on every edit, and when leaving or hiding the page
 document.addEventListener("input", scheduleSave);
