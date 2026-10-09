@@ -4431,8 +4431,8 @@ function showInspections() {
   showScreen("screen-inspections");
 }
 
-function openInspection(id) {
-  saveNow();
+function openInspection(id, skipSave) {
+  if (skipSave) clearTimeout(saveTimer); else saveNow();
   var rec = loadAll()[id];
   if (!rec) { alert("That inspection could not be found."); return; }
   rooms = restoreRooms(rec.rooms);
@@ -4485,6 +4485,7 @@ function importBackup(input) {
   if (!file) return;
   var reader = new FileReader();
   reader.onload = function() {
+    clearTimeout(saveTimer);
     try {
       var data = JSON.parse(reader.result);
       if (!data || !/-backup$/.test(data.format || "") || !data.inspections) throw new Error("Not an inspection backup file.");
@@ -4497,8 +4498,14 @@ function importBackup(input) {
       });
       if (!writeAll(all)) throw new Error("Could not save to this browser.");
       alert("Backup imported: " + added + " added, " + replaced + " updated.");
-      if (all[currentInspId]) openInspection(currentInspId); else showInspections();
-      if (document.getElementById("screen-inspections").style.display === "block") showInspections();
+      // Reload what's on screen from the imported data. Don't save the on-screen copy
+      // first, or it would overwrite the inspection that was just imported.
+      if (all[currentInspId]) {
+        openInspection(currentInspId, true);
+        showInspections();
+      } else {
+        showInspections();
+      }
     } catch (e) {
       alert("Import failed: " + e.message);
     }
@@ -4509,7 +4516,10 @@ function importBackup(input) {
 
 // Save on every edit, and when leaving or hiding the page
 document.addEventListener("input", scheduleSave);
-document.addEventListener("change", scheduleSave);
+document.addEventListener("change", function(e) {
+  if (e.target && e.target.type === "file") return;
+  scheduleSave();
+});
 document.addEventListener("visibilitychange", function() { if (document.visibilityState === "hidden") saveNow(); });
 window.addEventListener("pagehide", saveNow);
 
