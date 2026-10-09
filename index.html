@@ -131,6 +131,7 @@ body {
 
 .area-comment-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   font-size: 14px;
@@ -442,6 +443,72 @@ body {
   margin-top: 3px;
 }
 
+/* Findings listed under an item, like the city's screen */
+.finding-line {
+  font-size: 13px;
+  color: #222;
+  margin: 3px 0 0 14px;
+  line-height: 1.35;
+}
+.finding-line b { color: #222; }
+.finding-line.req b { color: #cc3300; }
+.finding-comment { color: #444; }
+
+/* Setup screens (owner / dwelling) */
+.setup-head { background:#1a2744; color:#fff; padding:12px 16px; font-size:17px; font-weight:bold; }
+.setup-body { padding:14px 16px 30px; }
+.prop-box { border:1px solid #1a2744; padding:10px 12px; margin-bottom:16px; display:grid; grid-template-columns:auto 1fr; gap:8px 12px; align-items:center; }
+.prop-box label { font-size:13px; font-weight:bold; color:#556; text-align:right; white-space:nowrap; }
+.fld-in { width:100%; border:1px solid #bbb; border-radius:4px; padding:7px 9px; font-size:14px; font-family:inherit; background:#fff; }
+.fld-in.req-empty { border-color:#cc3300; background:#fff6f3; }
+.q-row { font-size:14px; font-weight:bold; margin:10px 0; display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; }
+.q-row label { font-weight:bold; display:inline-flex; align-items:center; gap:5px; }
+.q-row input[type=radio] { width:18px; height:18px; }
+.person-card { border:1px solid #ccd; border-radius:6px; padding:12px; margin:12px 0; background:#fafbfd; }
+.person-grid { display:grid; grid-template-columns:auto 1fr; gap:8px 10px; align-items:center; }
+.person-grid > label { font-size:13px; font-weight:bold; color:#556; text-align:right; }
+.req-star { color:#cc3300; }
+.phone-row { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.phone-row .fld-in { width:auto; }
+.setup-actions { display:flex; justify-content:space-between; gap:10px; margin-top:18px; }
+.btn-primary { background:#1a2744; color:#fff; border:none; border-radius:6px; padding:11px 20px; font-size:15px; font-weight:bold; font-family:inherit; cursor:pointer; }
+.btn-plain { background:none; border:1px solid #bbb; border-radius:6px; padding:11px 18px; font-size:14px; font-family:inherit; cursor:pointer; color:#444; }
+.link-btn { background:none; border:none; color:#1a56cc; text-decoration:underline; font-weight:bold; font-size:14px; cursor:pointer; padding:4px 0; font-family:inherit; }
+.dw-q { font-size:15px; font-weight:bold; margin:18px 0 8px; }
+.dw-a { padding-left:16px; }
+.defs { font-size:13px; color:#333; margin-top:16px; line-height:1.45; }
+
+/* Summary on the main screen */
+.sum-title { font-size:17px; font-weight:bold; padding:12px 14px 4px; color:#1a1a1a; }
+.sum-wrap { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:8px 14px 12px; }
+@media (max-width:600px) { .sum-wrap { grid-template-columns:1fr; } }
+.sum-box { border:1px solid #bbb; font-size:13px; }
+.sum-box h3 { margin:0; font-size:14px; background:#f0f0f0; padding:7px 10px; border-bottom:1px solid #bbb; display:flex; justify-content:space-between; align-items:center; }
+.sum-box .sum-in { padding:8px 10px; line-height:1.5; }
+.sum-box .sum-empty { color:#999; font-style:italic; }
+.sum-kv { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; }
+.sum-kv span:nth-child(odd) { color:#555; }
+
+/* Unit tabs */
+.unit-tabs { display:flex; gap:4px; padding:0 14px; margin-top:4px; flex-wrap:wrap; }
+.unit-tab { flex:1; min-width:110px; border:1px solid #bbb; border-bottom:none; border-radius:8px 8px 0 0; background:#f3f3f3; padding:9px 10px; font-size:15px; font-family:inherit; cursor:pointer; color:#1a56cc; text-decoration:underline; font-weight:bold; }
+.unit-tab.active { background:#ece9d8; color:#1a1a1a; }
+.unit-tab .tab-x { color:#cc3300; text-decoration:none; }
+.unit-tab .tab-ok { color:#2e7d4f; text-decoration:none; }
+.na-mark { color:#999; font-weight:bold; font-size:15px; }
+.x-mark { color:#cc0000; font-weight:bold; font-size:20px; line-height:1; }
+.main-link.is-na { color:#999; }
+.main-link.is-x { color:#cc0000; }
+.room-links { font-weight:bold; font-size:15px; margin-left:4px; }
+.room-links button { background:none; border:none; padding:0 1px; color:#1a56cc; text-decoration:underline; font-weight:bold; font-size:15px; cursor:pointer; font-family:inherit; }
+
+/* Completion marks on the main list */
+.done-cell { width: 34px; text-align: center; padding-left: 8px !important; padding-right: 0 !important; }
+.main-table td.done-cell { border-right: none; }
+.main-table td.done-cell + td { border-left: none; }
+.done-check { color: #2e7d4f; font-size: 22px; font-weight: bold; line-height: 1; }
+.progress-note { display: block; font-size: 11px; color: #777; font-weight: normal; text-decoration: none; margin-top: 2px; }
+
 
 @page { margin: 15mm; }
 @media print {
@@ -461,69 +528,39 @@ body {
   <button class="btn-pdf-top" onclick="showPDFForm()">PDF / XML</button>
 </div>
 
-<!-- SCREEN 0: PROPERTY INFO FORM -->
+<!-- SCREEN 0: REPORT DETAILS (evaluator + generate) -->
 <div id="screen-form" style="display:none;">
   <div style="background:#1a2744;color:white;padding:12px 16px;font-size:16px;font-weight:bold;">
-    Property Information
+    Evaluator &amp; Report
   </div>
   <div style="padding:14px 16px;max-width:640px;margin:0 auto;">
-    <p style="font-size:13px;color:#555;margin-bottom:14px;">Fill in the property details before generating your PDF report.</p>
+    <p style="font-size:13px;color:#555;margin-bottom:14px;">Your name, phone and inspector number fill in automatically on every new inspection. Change them here if someone else is doing the evaluation. Property, owner and dwelling info are edited from the main screen.</p>
 
     <div style="display:grid;gap:10px;">
-      <div>
-        <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Property Address *</label>
-        <input id="fi-address" type="text" placeholder="Street address, city, zip"
-          style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div>
           <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluator Name</label>
-          <input id="fi-evalname" type="text" placeholder="Full name"
-            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+          <input id="fi-evalname" type="text" placeholder="Full name" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div>
           <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluator Phone</label>
-          <input id="fi-evalphone" type="tel" placeholder="612-000-0000"
-            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+          <input id="fi-evalphone" type="tel" placeholder="612-000-0000" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Inspector / License #</label>
+          <input id="fi-evallic" type="text" placeholder="License number" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluation #</label>
+          <input id="fi-evalnum" type="text" placeholder="Evaluation number" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div>
           <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluation Date</label>
-          <input id="fi-date" type="date"
-            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluation #</label>
-          <input id="fi-evalnum" type="text" placeholder="Evaluation number"
-            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-        </div>
-      </div>
-      <div>
-        <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Current Owner Name</label>
-        <input id="fi-ownername" type="text" placeholder="Owner full name"
-          style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-      </div>
-      <div>
-        <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Owner Address</label>
-        <input id="fi-owneraddress" type="text" placeholder="Street address, city, state, zip"
-          style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-        <div>
-          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Units</label>
-          <input id="fi-units" type="text" value="1"
-            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Building Type</label>
-          <input id="fi-bldgtype" type="text" value="Single Family Home"
-            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Zoning</label>
-          <input id="fi-zoning" type="text" value="UN1"
-            style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+          <input id="fi-date" type="date" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
         </div>
       </div>
     </div>
@@ -547,16 +584,81 @@ body {
 <!-- SCREEN 1: MAIN MENU -->
 <div id="screen-main">
   <div id="saveBar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#eef3f9;border-bottom:1px solid #cdd9e6;flex-wrap:wrap;"></div>
-  <p class="page-intro">Click on each area of property to complete report. When all areas are complete confirm agreement and date of evaluation then press Submit Report.</p>
+  <div id="summaryBox"></div>
+  <p class="page-intro">Click on each area of property to complete report. When all areas are complete, tap PDF / XML to create the report.</p>
+  <div id="unitTabs" class="unit-tabs"></div>
   <table class="main-table">
     <thead>
       <tr>
-        <th>Evaluation Report</th>
+        <th colspan="2">Evaluation Report</th>
         <th style="text-align:right">Add Room</th>
       </tr>
     </thead>
     <tbody id="mainTableBody"></tbody>
   </table>
+</div>
+
+<!-- SCREEN: CONFIRM OWNER INFORMATION -->
+<div id="screen-owner" style="display:none;">
+  <div class="setup-head">Confirm Owner Information</div>
+  <div class="setup-body">
+    <div class="prop-box">
+      <label for="fi-address"><span class="req-star">*</span> Property Address</label>
+      <input id="fi-address" class="fld-in" type="text" placeholder="e.g. 1317 Monroe St NE" autocomplete="off">
+      <label for="fi-zoning">Zoning</label>
+      <input id="fi-zoning" class="fld-in" type="text" placeholder="e.g. UN2" style="max-width:160px;" autocomplete="off">
+    </div>
+    <div class="q-row">Does the owner reside at the address above?
+      <label><input type="radio" name="ownerResides" value="Yes"> Yes</label>
+      <label><input type="radio" name="ownerResides" value="No"> No</label>
+      <span style="font-weight:normal;color:#555;">(if no, enter the owner&#39;s address below)</span>
+    </div>
+    <div id="personsBox"></div>
+    <button class="link-btn" type="button" onclick="addPerson()">Add Another Person</button>
+    <div class="setup-actions">
+      <button class="btn-plain" type="button" onclick="setupBack()">Cancel</button>
+      <button class="btn-primary" type="button" onclick="ownerNext()">Next &gt;&gt;</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: DWELLING INFORMATION -->
+<div id="screen-dwelling" style="display:none;">
+  <div class="setup-head">Dwelling Information</div>
+  <div class="setup-body">
+    <div class="prop-box" id="dwPropBox"></div>
+    <div class="dw-q"><span class="req-star">*</span> What is the building type?</div>
+    <div class="dw-a">
+      <select id="fi-bldgtype" class="fld-in" style="width:auto;min-width:240px;">
+        <option value="">-- Select Building Type --</option>
+        <option>Single Family Home</option>
+        <option>Duplex/Multiplex</option>
+        <option>Condominium</option>
+        <option>Townhouse</option>
+      </select>
+    </div>
+    <div class="dw-q"><span class="req-star">*</span> Please select the number of units you observed at this property.</div>
+    <div class="dw-a">
+      <label style="font-weight:bold;color:#556;margin-right:8px;">Units</label>
+      <select id="fi-units" class="fld-in" style="width:auto;" onchange="unitsChanged(this)">
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+      </select>
+      <div id="unitLabels" style="margin-top:10px;"></div>
+    </div>
+    <div class="dw-q"><span class="req-star">*</span> Please select the number of stories at this property.<sup>*</sup></div>
+    <div class="dw-a">
+      <select id="fi-stories" class="fld-in" style="width:auto;min-width:240px;">
+        <option value="">-- Select number of stories --</option>
+        <option>1</option><option>1+walkout bsmt</option><option>1.5</option><option>1.75</option>
+        <option>2</option><option>2.5</option><option>3</option><option>3.5</option><option>4</option>
+      </select>
+    </div>
+    <div class="defs"><sup>*</sup><b>Definitions:</b><br>1+walkout bsmt: Single story home with walkout basement level<br>1.75: Interior slant portion of roof connects directly with side wall. If kneewall or side attic space exists, this is considered a 1.5 story.</div>
+    <div class="setup-actions">
+      <button class="btn-plain" type="button" onclick="setupBack()">Cancel</button>
+      <button class="btn-primary" type="button" onclick="dwellingNext()">Next &gt;&gt;</button>
+    </div>
+  </div>
 </div>
 
 <!-- SCREEN: REPORT (print / save as PDF) -->
@@ -3362,6 +3464,56 @@ function getItem(cat, itemId) {
   return cat.items.find(function(i) { return i.id === itemId; });
 }
 
+// An item is done once Meets Requirements is checked or any condition is picked
+function itemDone(item, s) {
+  return !!s && (s.meetsReq || s.conditions.some(function(c) { return c.checked; }));
+}
+
+// A room/area is done when marked Not Applicable, or every item is done.
+// Sections with no numbered items (Wall Insulation) count as done once any info is entered.
+function roomProgress(cat, room) {
+  if (room.na) return { done: true, count: cat.items.length, total: cat.items.length, started: true };
+  if (!cat.items.length) {
+    var filled = Object.keys(room.extraData || {}).some(function(k) { return room.extraData[k]; });
+    return { done: filled, count: 0, total: 0, started: filled };
+  }
+  var n = cat.items.filter(function(item) { return itemDone(item, room.itemStates[item.id]); }).length;
+  return { done: n === cat.items.length, count: n, total: cat.items.length, started: n > 0 };
+}
+
+function checkMark() {
+  var s = document.createElement("span");
+  s.className = "done-check";
+  s.setAttribute("aria-label", "Complete");
+  s.textContent = "\u2713";
+  return s;
+}
+
+// "CODE: text - comment" lines for every picked condition
+function findingLines(conds, states, showCode) {
+  var out = [];
+  states.forEach(function(st, i) {
+    if (!st.checked) return;
+    var cond = conds[i];
+    var line = document.createElement("div");
+    line.className = "finding-line" + (isRequired(cond.code) ? " req" : "");
+    if (showCode) {
+      var b = document.createElement("b");
+      b.textContent = cond.code + ": ";
+      line.appendChild(b);
+    }
+    line.appendChild(document.createTextNode(cond.text));
+    if (st.comment && st.comment.trim()) {
+      var cm = document.createElement("span");
+      cm.className = "finding-comment";
+      cm.textContent = " \u2014 " + st.comment.trim();
+      line.appendChild(cm);
+    }
+    out.push(line);
+  });
+  return out;
+}
+
 function itemHasRequired(item, s) {
   return s.conditions.some(function(c, i) {
     return c.checked && isRequired(item.conditions[i].code);
@@ -3403,10 +3555,64 @@ categories.forEach(function(cat) {
 });
 
 // =======================================
+// UNITS (duplex / multiplex) and OWNER INFO
+// Each unit has its own full checklist. "rooms" always points at the unit on screen.
+// =======================================
+var units = [{ label: "", rooms: rooms }];
+var curUnit = 0;
+var info = blankInfo();
+var flowMode = "edit";   // "new" while setting up a new inspection
+
+function freshRooms() {
+  var r = {};
+  categories.forEach(function(cat) { r[cat.id] = [makeRoomState(cat)]; });
+  return r;
+}
+function setUnit(i) {
+  curUnit = Math.max(0, Math.min(i, units.length - 1));
+  rooms = units[curUnit].rooms;
+}
+function unitName(i) { return (units[i] && units[i].label) || ("Unit " + (i + 1)); }
+function unitTag() { return units.length > 1 ? unitName(curUnit) : ""; }
+
+function blankPerson(primary) {
+  return { primary: !!primary, first: "", last: "", biz: "", addr: "", city: "", state: "MN", zip: "", email: "",
+           p1a: "", p1b: "", p1c: "", p1type: "", p1pub: true, p2a: "", p2b: "", p2c: "", p2type: "", p2pub: true };
+}
+function blankInfo() { return { ownerResides: "", persons: [blankPerson(true)] }; }
+function primaryPerson() {
+  return info.persons.filter(function(p) { return p.primary; })[0] || info.persons[0] || blankPerson(true);
+}
+function personName(p) { return [p.first, p.last].filter(Boolean).join(" "); }
+function personPhone(p, n) {
+  var a = p["p" + n + "a"], b = p["p" + n + "b"], d = p["p" + n + "c"];
+  if (!a && !b && !d) return "";
+  return (a ? "(" + a + ") " : "") + [b, d].filter(Boolean).join("-") + (p["p" + n + "type"] ? " " + p["p" + n + "type"] : "");
+}
+function personAddress(p) {
+  var line2 = (p.city || p.zip) ? [p.city, [p.state, p.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") : "";
+  return [p.addr, line2].filter(Boolean).join(", ");
+}
+function sectionCounts(cat) { return cat.id !== "condo"; }   // Condo Conversion is optional
+
+function unitStatus(u) {
+  var done = true, started = false;
+  categories.forEach(function(cat) {
+    if (!sectionCounts(cat)) return;
+    u.rooms[cat.id].forEach(function(room) {
+      var pr = roomProgress(cat, room);
+      if (!pr.done) done = false;
+      if (pr.started) started = true;
+    });
+  });
+  return done ? "done" : (started ? "started" : "");
+}
+
+// =======================================
 // SCREEN NAVIGATION
 // =======================================
 function showScreen(id) {
-  var screens = ["screen-form","screen-report","screen-main","screen-inspections","screen-roompicker","screen-category","screen-item"];
+  var screens = ["screen-form","screen-owner","screen-dwelling","screen-report","screen-main","screen-inspections","screen-roompicker","screen-category","screen-item"];
   screens.forEach(function(s) {
     document.getElementById(s).style.display = "none";
   });
@@ -3442,10 +3648,16 @@ function showCategory() {
 // SCREEN 1 - MAIN MENU
 // =======================================
 function renderMain() {
+  renderSummary();
+  renderUnitTabs();
   var tbody = document.getElementById("mainTableBody");
   tbody.innerHTML = "";
   categories.forEach(function(cat) {
     var roomList = rooms[cat.id];
+    var progs = roomList.map(function(room) { return roomProgress(cat, room); });
+    var allNA = roomList.every(function(room) { return room.na; });
+    var allDone = progs.every(function(pr) { return pr.done; });
+    var started = progs.some(function(pr) { return pr.started; });
     var rrCount = 0;
     roomList.forEach(function(room) {
       if (room.na) return;
@@ -3456,26 +3668,63 @@ function renderMain() {
 
     var tr = document.createElement("tr");
 
+    var tdDone = document.createElement("td");
+    tdDone.className = "done-cell";
+    if (allNA) {
+      var na = document.createElement("span"); na.className = "na-mark"; na.textContent = "NA"; tdDone.appendChild(na);
+    } else if (allDone) {
+      tdDone.appendChild(checkMark());
+    } else if (started) {
+      var x = document.createElement("span"); x.className = "x-mark"; x.textContent = "\u2716"; x.setAttribute("aria-label", "Not finished"); tdDone.appendChild(x);
+    }
+    tr.appendChild(tdDone);
+
     var td1 = document.createElement("td");
     var nameBtn = document.createElement("button");
-    nameBtn.className = "main-link";
-    nameBtn.innerHTML = cat.name;
-    if (rrCount > 0) {
-      nameBtn.innerHTML += ' <span class="room-badge">' + rrCount + "</span>";
-    }
-    if (roomList.length > 1) {
-      nameBtn.innerHTML += ' <span class="room-badge" style="background:#1a2744;">' + roomList.length + "</span>";
-    }
+    nameBtn.className = "main-link" + (allNA ? " is-na" : (!allDone && started ? " is-x" : ""));
+    nameBtn.style.cssText = "display:inline;width:auto;";
+    nameBtn.textContent = cat.name;
     nameBtn.addEventListener("click", (function(id) {
       return function() { handleCategoryClick(id); };
     })(cat.id));
     td1.appendChild(nameBtn);
+
+    if (roomList.length > 1) {
+      var links = document.createElement("span");
+      links.className = "room-links";
+      roomList.forEach(function(room, ri) {
+        if (ri) links.appendChild(document.createTextNode(", "));
+        var b = document.createElement("button");
+        b.textContent = String(ri + 1);
+        b.setAttribute("aria-label", cat.name + " room " + (ri + 1));
+        b.addEventListener("click", function() { cameFromPicker = false; openCategory(cat.id, ri); });
+        links.appendChild(b);
+      });
+      td1.appendChild(links);
+    }
+    if (rrCount > 0) {
+      var badge = document.createElement("span");
+      badge.className = "room-badge"; badge.textContent = rrCount; badge.title = "Required repairs";
+      td1.appendChild(badge);
+    }
+    if (!allDone && started && !allNA) {
+      var note = document.createElement("span");
+      note.className = "progress-note";
+      if (roomList.length === 1 && cat.items.length) {
+        note.textContent = progs[0].count + " of " + progs[0].total + " items done";
+      } else {
+        var dr = progs.filter(function(pr) { return pr.done; }).length;
+        note.textContent = dr + " of " + roomList.length + " rooms done";
+      }
+      td1.appendChild(note);
+    }
 
     var td2 = document.createElement("td");
     td2.className = "add-room-cell";
     var addBtn = document.createElement("button");
     addBtn.className = "btn-add";
     addBtn.textContent = "Add";
+    if (allNA) { addBtn.disabled = true; addBtn.style.opacity = "0.4"; }
     addBtn.addEventListener("click", (function(id) {
       return function(e) { e.stopPropagation(); addNewRoom(id); };
     })(cat.id));
@@ -3485,6 +3734,273 @@ function renderMain() {
     tr.appendChild(td2);
     tbody.appendChild(tr);
   });
+}
+
+function renderUnitTabs() {
+  var box = document.getElementById("unitTabs");
+  box.innerHTML = "";
+  if (units.length < 2) { box.style.display = "none"; return; }
+  box.style.display = "flex";
+  units.forEach(function(u, i) {
+    var b = document.createElement("button");
+    b.className = "unit-tab" + (i === curUnit ? " active" : "");
+    var st = unitStatus(u);
+    if (st === "done") { var ok = document.createElement("span"); ok.className = "tab-ok"; ok.textContent = "\u2713 "; b.appendChild(ok); }
+    else if (st === "started") { var xx = document.createElement("span"); xx.className = "tab-x"; xx.textContent = "\u2716 "; b.appendChild(xx); }
+    b.appendChild(document.createTextNode(unitName(i)));
+    b.addEventListener("click", function() { setUnit(i); renderMain(); });
+    box.appendChild(b);
+  });
+}
+
+function renderSummary() {
+  var box = document.getElementById("summaryBox");
+  box.innerHTML = "";
+  var addr = (document.getElementById("fi-address").value || "").trim();
+  var t = document.createElement("div");
+  t.className = "sum-title";
+  t.textContent = addr ? "Report: " + addr.toUpperCase() : "New inspection";
+  box.appendChild(t);
+
+  var wrap = document.createElement("div");
+  wrap.className = "sum-wrap";
+
+  function boxEl(title, onEdit) {
+    var bx = document.createElement("div"); bx.className = "sum-box";
+    var h = document.createElement("h3"); h.textContent = title;
+    var eb = document.createElement("button"); eb.className = "btn-comment-add"; eb.textContent = "Edit";
+    eb.addEventListener("click", onEdit);
+    h.appendChild(eb); bx.appendChild(h);
+    var inner = document.createElement("div"); inner.className = "sum-in"; bx.appendChild(inner);
+    wrap.appendChild(bx);
+    return inner;
+  }
+
+  var o = boxEl("Owner Information", function() { showOwner("edit"); });
+  var named = info.persons.filter(function(p) { return personName(p) || p.biz; });
+  if (!named.length) {
+    o.innerHTML = "<span class='sum-empty'>Not entered yet</span>";
+  } else {
+    named.forEach(function(p, i) {
+      var d = document.createElement("div");
+      if (i) d.style.marginTop = "6px";
+      var cityLine = (p.city || p.zip) ? [p.city, [p.state, p.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") : "";
+      var lines = [personName(p) + (p.primary ? "  (primary contact)" : ""), p.biz, p.addr, cityLine,
+                   personPhone(p, 1), personPhone(p, 2), p.email].filter(Boolean);
+      lines.forEach(function(l, li) {
+        var ln = document.createElement("div");
+        ln.textContent = l;
+        if (!li) ln.style.fontWeight = "bold";
+        d.appendChild(ln);
+      });
+      o.appendChild(d);
+    });
+  }
+
+  var dw = boxEl("Dwelling Information", function() { showDwelling("edit"); });
+  var kv = document.createElement("div"); kv.className = "sum-kv";
+  function row(k, v) {
+    var a = document.createElement("span"); a.textContent = k;
+    var b = document.createElement("span"); b.textContent = v || "\u2014";
+    kv.appendChild(a); kv.appendChild(b);
+  }
+  row("Building Type:", document.getElementById("fi-bldgtype").value);
+  row("Observed Units:", String(units.length));
+  if (units.length > 1) row("Numbers/Labels:", units.map(function(u, i) { return unitName(i); }).join(", "));
+  row("Number of Stories:", document.getElementById("fi-stories").value);
+  row("Zoning:", document.getElementById("fi-zoning").value);
+  dw.appendChild(kv);
+
+  box.appendChild(wrap);
+}
+
+// =======================================
+// OWNER + DWELLING SETUP SCREENS
+// =======================================
+function escAttr(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+var US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+var PHONE_TYPES = ["Cell Phone", "Home Phone", "Work Phone", "Other"];
+
+function showOwner(mode) {
+  flowMode = mode;
+  document.querySelectorAll("input[name=ownerResides]").forEach(function(r) { r.checked = (r.value === info.ownerResides); });
+  renderPersons();
+  showScreen("screen-owner");
+}
+
+function renderPersons() {
+  var box = document.getElementById("personsBox");
+  var h = "";
+  info.persons.forEach(function(p, i) {
+    function inp(k, attrs) { return '<input class="fld-in" data-i="' + i + '" data-k="' + k + '" value="' + escAttr(p[k]) + '" ' + (attrs || "") + '>'; }
+    function sel(k, opts, ph) {
+      var s = '<select class="fld-in" style="width:auto;" data-i="' + i + '" data-k="' + k + '"><option value="">' + ph + '</option>';
+      opts.forEach(function(o) { s += '<option' + (p[k] === o ? ' selected' : '') + '>' + o + '</option>'; });
+      return s + '</select>';
+    }
+    function phone(n, req) {
+      return '<label>' + (req ? '<span class="req-star">*</span> ' : '') + 'Phone</label><div class="phone-row">( ' +
+        inp("p" + n + "a", 'inputmode="numeric" maxlength="3" size="3" style="width:56px;"') + ' ) ' +
+        inp("p" + n + "b", 'inputmode="numeric" maxlength="3" size="3" style="width:56px;"') + ' ' +
+        inp("p" + n + "c", 'inputmode="numeric" maxlength="4" size="4" style="width:70px;"') + ' ' +
+        sel("p" + n + "type", PHONE_TYPES, "-- Select Phone Type --") +
+        ' <label style="font-weight:normal;display:inline-flex;gap:4px;align-items:center;"><input type="checkbox" data-i="' + i + '" data-k="p' + n + 'pub"' + (p["p" + n + "pub"] ? " checked" : "") + '> Is Public</label></div>';
+    }
+    h += '<div class="person-card">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+         '<label style="display:inline-flex;gap:6px;align-items:center;font-size:14px;"><input type="radio" name="primaryContact" data-i="' + i + '" data-k="primary"' + (p.primary ? " checked" : "") + ' style="width:18px;height:18px;"> This is the Primary Contact</label>' +
+         (i ? '<button type="button" class="link-btn" style="color:#cc3300;" onclick="removePerson(' + i + ')">Remove</button>' : '') + '</div>';
+    h += '<div class="person-grid">';
+    h += '<label><span class="req-star">*</span> First Name</label>' + inp("first", 'data-req="1" autocomplete="off"');
+    h += '<label><span class="req-star">*</span> Last Name</label>' + inp("last", 'data-req="1" autocomplete="off"');
+    h += '<label>Business or Relationship</label><div>' + inp("biz", 'autocomplete="off"') + '<div style="font-size:12px;color:#666;margin-top:2px;">(i.e. Bank, Power of Attorney, Executor)</div></div>';
+    h += '<label><span class="req-star">*</span> Address</label>' + inp("addr", 'data-req="1" autocomplete="off"');
+    h += '<label><span class="req-star">*</span> City</label>' + inp("city", 'data-req="1" autocomplete="off"');
+    h += '<label><span class="req-star">*</span> State</label><div class="phone-row">' + sel("state", US_STATES, "- Select -") +
+         ' <span style="font-size:13px;font-weight:bold;color:#556;"><span class="req-star">*</span> Zip Code</span> ' + inp("zip", 'data-req="1" inputmode="numeric" maxlength="10" style="width:110px;"') + '</div>';
+    h += '<label>E-mail Address</label>' + inp("email", 'type="email" autocomplete="off"');
+    h += phone(1, true) + phone(2, false);
+    h += '</div></div>';
+  });
+  box.innerHTML = h;
+}
+
+function readPersonField(el) {
+  var i = +el.getAttribute("data-i"), k = el.getAttribute("data-k");
+  var p = info.persons[i];
+  if (!p) return;
+  if (k === "primary") {
+    info.persons.forEach(function(q, qi) { q.primary = (qi === i); });
+  } else if (el.type === "checkbox") {
+    p[k] = el.checked;
+  } else {
+    p[k] = el.value;
+  }
+  if (el.classList.contains("req-empty") && el.value) el.classList.remove("req-empty");
+}
+
+function addPerson() {
+  info.persons.push(blankPerson(false));
+  renderPersons();
+  scheduleSave();
+}
+function removePerson(i) {
+  var wasPrimary = info.persons[i].primary;
+  info.persons.splice(i, 1);
+  if (wasPrimary && info.persons.length) info.persons[0].primary = true;
+  renderPersons();
+  scheduleSave();
+}
+
+function ownerResidesChanged(v) {
+  info.ownerResides = v;
+  var p = primaryPerson();
+  if (v === "Yes" && !p.addr) {
+    p.addr = document.getElementById("fi-address").value;
+    if (!p.city) p.city = "Minneapolis";
+    if (!p.state) p.state = "MN";
+    renderPersons();
+  }
+}
+
+function ownerNext() {
+  var missing = false;
+  var a = document.getElementById("fi-address");
+  a.classList.toggle("req-empty", !a.value.trim());
+  if (!a.value.trim()) missing = true;
+  var p = primaryPerson(), pi = info.persons.indexOf(p);
+  ["first", "last", "addr", "city", "state", "zip", "p1a", "p1b", "p1c"].forEach(function(k) {
+    var el = document.querySelector('#personsBox [data-i="' + pi + '"][data-k="' + k + '"]');
+    var empty = !String(p[k] || "").trim();
+    if (el) el.classList.toggle("req-empty", empty);
+    if (empty) missing = true;
+  });
+  if (missing && !confirm("Some required fields (marked *) are empty. Continue anyway? You can fill them in later.")) return;
+  saveNow();
+  if (flowMode === "new") showDwelling("new"); else showMain();
+}
+
+function showDwelling(mode) {
+  flowMode = mode;
+  var pb = document.getElementById("dwPropBox");
+  pb.innerHTML = "";
+  [["Property Address", document.getElementById("fi-address").value], ["Zoning", document.getElementById("fi-zoning").value]].forEach(function(kv) {
+    var l = document.createElement("label"); l.textContent = kv[0];
+    var v = document.createElement("div"); v.textContent = kv[1] || "\u2014"; v.style.fontSize = "14px";
+    pb.appendChild(l); pb.appendChild(v);
+  });
+  document.getElementById("fi-units").value = String(units.length);
+  renderUnitLabels();
+  showScreen("screen-dwelling");
+}
+
+function renderUnitLabels() {
+  var box = document.getElementById("unitLabels");
+  box.innerHTML = "";
+  if (units.length < 2) return;
+  var t = document.createElement("div");
+  t.style.cssText = "font-size:13px;font-weight:bold;color:#556;margin-bottom:6px;";
+  t.textContent = "Numbers/Labels (for example Lower, Upper or Unit 1, Unit 2)";
+  box.appendChild(t);
+  units.forEach(function(u, i) {
+    var r = document.createElement("div");
+    r.style.cssText = "display:flex;gap:8px;align-items:center;margin-bottom:6px;";
+    var l = document.createElement("span"); l.textContent = "Unit " + (i + 1); l.style.cssText = "width:60px;font-size:13px;color:#555;";
+    var inp = document.createElement("input");
+    inp.className = "fld-in"; inp.style.maxWidth = "220px"; inp.value = u.label; inp.placeholder = "Unit " + (i + 1);
+    inp.addEventListener("input", function() { u.label = inp.value; });
+    r.appendChild(l); r.appendChild(inp);
+    box.appendChild(r);
+  });
+}
+
+function unitHasData(u) {
+  return categories.some(function(cat) {
+    return u.rooms[cat.id].some(function(r) {
+      if (r.na || r.label) return true;
+      if (Object.keys(r.extraData).some(function(k) { return r.extraData[k]; })) return true;
+      return Object.keys(r.itemStates).some(function(k) {
+        var s = r.itemStates[k];
+        return s.meetsReq || s.conditions.some(function(c) { return c.checked || c.comment; });
+      });
+    });
+  });
+}
+
+function unitsChanged(sel) {
+  var n = +sel.value;
+  if (n < units.length) {
+    var gone = units.slice(n).filter(unitHasData);
+    if (gone.length && !confirm("This removes " + gone.map(function(u) { return u.label || "a unit"; }).join(", ") +
+        " and everything entered for it. Continue?")) {
+      sel.value = String(units.length);
+      return;
+    }
+    units = units.slice(0, n);
+  }
+  while (units.length < n) units.push({ label: "Unit " + (units.length + 1), rooms: freshRooms() });
+  if (units.length > 1 && !units[0].label) units[0].label = "Unit 1";
+  setUnit(curUnit);
+  renderUnitLabels();
+  scheduleSave();
+}
+
+function dwellingNext() {
+  var bt = document.getElementById("fi-bldgtype"), st = document.getElementById("fi-stories");
+  bt.classList.toggle("req-empty", !bt.value);
+  st.classList.toggle("req-empty", !st.value);
+  if ((!bt.value || !st.value) && !confirm("Some required fields (marked *) are empty. Continue anyway? You can fill them in later.")) return;
+  saveNow();
+  flowMode = "edit";
+  showMain();
+}
+
+function setupBack() {
+  flowMode = "edit";
+  saveNow();
+  showMain();
 }
 
 function handleCategoryClick(catId) {
@@ -3509,7 +4025,7 @@ function addNewRoom(catId) {
 function showRoomPicker(catId) {
   currentCatId = catId;
   var cat = categories.find(function(c) { return c.id === catId; });
-  document.getElementById("rpTitle").textContent = cat.name;
+  document.getElementById("rpTitle").textContent = (unitTag() ? unitTag() + " > " : "") + cat.name;
 
   var list = document.getElementById("roomPickerList");
   list.innerHTML = "";
@@ -3529,6 +4045,18 @@ function showRoomPicker(catId) {
     var openBtn = document.createElement("button");
     openBtn.className = "main-link";
     openBtn.innerHTML = label + (rrCount > 0 ? ' <span class="room-badge">' + rrCount + " RR</span>" : "");
+    var rp = roomProgress(cat, room);
+    var mark = document.createElement("span");
+    mark.style.cssText = "display:inline-block;width:28px;flex-shrink:0;";
+    if (rp.done) mark.appendChild(checkMark());
+    openBtn.style.flex = "1";
+    row.appendChild(mark);
+    if (!rp.done && rp.started && cat.items.length) {
+      var pn = document.createElement("span");
+      pn.className = "progress-note";
+      pn.textContent = rp.count + " of " + rp.total + " items done";
+      openBtn.appendChild(pn);
+    }
     openBtn.addEventListener("click", (function(id, idx) {
       return function() { cameFromPicker = true; openCategory(id, idx); };
     })(catId, ri));
@@ -3584,7 +4112,7 @@ function openCategory(catId, roomIdx) {
   var room = rooms[catId][roomIdx];
   var roomLabel = rooms[catId].length > 1 ? (" (Room " + (roomIdx + 1) + ")") : "";
 
-  document.getElementById("catScreenTitle").textContent = cat.name + roomLabel;
+  document.getElementById("catScreenTitle").textContent = (unitTag() ? unitTag() + " > " : "") + cat.name + roomLabel;
   document.getElementById("catNACheck").checked = room.na;
   document.getElementById("catLabelInput").value = room.label || "";
   document.getElementById("catLabelCaption").style.display = cat.noLabel ? "none" : "";
@@ -3608,18 +4136,20 @@ function renderAreaComment(cat, room) {
   lbl.textContent = "General Area Comment";
   wrap.appendChild(lbl);
 
+  var s = room.itemStates[AREA_ID];
+  var has = s && s.conditions.some(function(c) { return c.checked; });
+
   var btn = document.createElement("button");
   btn.className = "btn-comment-add";
-  btn.textContent = "Add";
+  btn.textContent = has ? "Edit" : "Add";
   btn.addEventListener("click", function() { openItem(AREA_ID); });
   wrap.appendChild(btn);
 
-  var s = room.itemStates[AREA_ID];
-  if (s && s.conditions.some(function(c) { return c.checked; })) {
-    var note = document.createElement("span");
-    note.className = "area-note";
-    note.textContent = "Has comments";
-    wrap.appendChild(note);
+  if (has) {
+    var list = document.createElement("div");
+    list.style.cssText = "flex-basis:100%;font-weight:normal;";
+    findingLines(cat.areaConditions, s.conditions, false).forEach(function(el) { list.appendChild(el); });
+    wrap.appendChild(list);
   }
 }
 
@@ -3783,23 +4313,13 @@ function renderCategoryItems(cat, room) {
     })(item.id));
     td2.appendChild(nameBtn);
 
-    if (hasRR) {
-      var note = document.createElement("div");
-      note.className = "item-inline-comment";
-      note.textContent = "Required repair flagged";
-      td2.appendChild(note);
-    } else if (hasFindings) {
-      var note2 = document.createElement("div");
-      note2.className = "item-inline-comment";
-      note2.textContent = "Has comments";
-      td2.appendChild(note2);
-    }
+    findingLines(item.conditions, s.conditions, true).forEach(function(el) { td2.appendChild(el); });
 
     var td3 = document.createElement("td");
     td3.className = "item-comment-cell";
     var addBtn = document.createElement("button");
     addBtn.className = "btn-comment-add";
-    addBtn.textContent = "Add";
+    addBtn.textContent = hasFindings ? "Edit" : "Add";
     addBtn.addEventListener("click", (function(id) {
       return function() { openItem(id); };
     })(item.id));
@@ -3876,10 +4396,10 @@ function openItem(itemId) {
 
   var crumb;
   if (itemId === AREA_ID) {
-    crumb = cat.name + roomLabel + " > General Area Comment";
+    crumb = (unitTag() ? unitTag() + " > " : "") + cat.name + roomLabel + " > General Area Comment";
   } else {
     var itemNum = (cat.itemStartIndex || 1) + cat.items.indexOf(item);
-    crumb = cat.name + roomLabel + " > " + itemNum + ". " + item.name;
+    crumb = (unitTag() ? unitTag() + " > " : "") + cat.name + roomLabel + " > " + itemNum + ". " + item.name;
   }
   document.getElementById("itemScreenBreadcrumb").textContent = crumb;
 
@@ -3976,11 +4496,17 @@ function generatePDF() {
   var evalName = document.getElementById("fi-evalname").value || "";
   var evalPhone = document.getElementById("fi-evalphone").value || "";
   var evalNum = document.getElementById("fi-evalnum").value || "";
-  var ownerName = document.getElementById("fi-ownername").value || "";
-  var ownerAddress = document.getElementById("fi-owneraddress").value || "";
-  var units = document.getElementById("fi-units").value || "1";
-  var bldgType = document.getElementById("fi-bldgtype").value || "Single Family Home";
-  var zoning = document.getElementById("fi-zoning").value || "UN1";
+  var evalLic = document.getElementById("fi-evallic").value || "";
+  var esc = function(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+  var pp = primaryPerson();
+  var ownerName = esc(personName(pp) + (pp.biz ? " (" + pp.biz + ")" : ""));
+  var ownerAddress = esc(personAddress(pp));
+  var contact = esc([personName(pp), personPhone(pp, 1)].filter(Boolean).join(", "));
+  var unitCount = String(units.length) + (units.length > 1 ? " (" + esc(units.map(function(u, i) { return unitName(i); }).join(", ")) + ")" : "");
+  var bldgType = esc(document.getElementById("fi-bldgtype").value);
+  var zoning = esc(document.getElementById("fi-zoning").value);
+  var stories = esc(document.getElementById("fi-stories").value);
+  address = esc(address);
 
   var R = "#reportBody ";
   var css = "<style>#reportBody{font-family:Arial,sans-serif;font-size:12px;padding:20px;color:#000;background:#fff;}";
@@ -3996,29 +4522,34 @@ function generatePDF() {
   h += "<h1>Truth in Sale of Housing Disclosure Report</h1>";
   h += "<div style='font-size:9px;color:#555;margin-bottom:6px;'>NOTICE - Read Entire Report Carefully. This is not a rental license inspection or a buyers inspection!</div>";
   h += "<div><b>Address:</b> " + address + "</div><hr>";
-  h += "<table><tr><td><b>Current Owner Name:</b> " + ownerName + "</td><td><b>Contact:</b> " + ownerName + "</td></tr>";
+  h += "<table><tr><td><b>Current Owner Name:</b> " + ownerName + "</td><td><b>Contact:</b> " + contact + "</td></tr>";
   h += "<tr><td><b>Owner Address:</b> " + ownerAddress + "</td><td><b>Evaluation #:</b> " + evalNum + "</td></tr></table><hr>";
 
   var hasRR = false;
-  categories.forEach(function(cat) {
-    rooms[cat.id].forEach(function(room) {
-      if (room.na) return;
-      cat.items.forEach(function(item) {
-        if (itemHasRequired(item, room.itemStates[item.id])) hasRR = true;
+  units.forEach(function(u) {
+    categories.forEach(function(cat) {
+      u.rooms[cat.id].forEach(function(room) {
+        if (room.na) return;
+        cat.items.forEach(function(item) {
+          if (itemHasRequired(item, room.itemStates[item.id])) hasRR = true;
+        });
       });
     });
   });
 
   h += "<div style='text-align:center;font-weight:bold;margin:6px 0;'>" + (hasRR ? "THERE ARE REQUIRED REPAIR/REPLACE ITEMS NOTED IN THIS REPORT." : "THERE ARE NO REQUIRED REPAIR/REPLACE ITEMS IN THIS REPORT.") + "</div>";
-  h += "<table><tr><td><b>Observed Number of Units:</b> " + units + "</td><td><b>Building Type:</b> " + bldgType + "</td><td><b>Zoning:</b> " + zoning + "</td></tr></table><hr>";
+  h += "<table><tr><td><b>Observed Number of Units:</b> " + unitCount + "</td><td><b>Building Type:</b> " + bldgType + "</td><td><b>Zoning:</b> " + zoning + "</td><td><b>Stories:</b> " + stories + "</td></tr></table><hr>";
 
   h += "<div class='codes'><b>EVALUATION CODES:</b><br>";
   h += "M=Meets Requirements &nbsp; C=Comments &nbsp; NA=Not Applicable &nbsp; B=Below Minimum Requirements &nbsp; SC=Suggested Correction<br>";
   h += "RRE=Repair/Replace, Evaluator Verification Required &nbsp; RRP=Repair/Replace, Permit Required &nbsp; LIC=Safety Check, Licensed Contractor Required</div>";
 
+  units.forEach(function(u, ui) {
+  var uRooms = u.rooms;
+  if (units.length > 1) h += "<div style='font-size:14px;font-weight:bold;background:#e8e8e8;padding:5px 8px;margin:18px 0 0 0;'>UNIT: " + esc(unitName(ui)) + "</div>";
   categories.forEach(function(cat) {
-    rooms[cat.id].forEach(function(room, ri) {
-      var rlabel = rooms[cat.id].length > 1 ? (" (" + (room.label || ("Room " + (ri+1))) + ")") : "";
+    uRooms[cat.id].forEach(function(room, ri) {
+      var rlabel = uRooms[cat.id].length > 1 ? (" (" + esc(room.label || ("Room " + (ri+1))) + ")") : "";
       var hasContent = room.na || Object.keys(room.itemStates).some(function(k) {
         var st = room.itemStates[k];
         return st.meetsReq || st.conditions.some(function(c) { return c.checked; });
@@ -4030,7 +4561,7 @@ function generatePDF() {
       if (cat.extraFields && room.extraData) {
         cat.extraFields.forEach(function(f) {
           var v = room.extraData[f.key] || "";
-          if (v) h += "<div style='font-size:10px;font-weight:bold;padding:2px 0;'>" + f.label.replace(/:$/, "") + ": " + v + "</div>";
+          if (v) h += "<div style='font-size:10px;font-weight:bold;padding:2px 0;'>" + f.label.replace(/:$/, "") + ": " + esc(v) + "</div>";
         });
       }
 
@@ -4060,11 +4591,12 @@ function generatePDF() {
       });
     });
   });
+  });
 
   h += "<div class='sig'>";
   h += "<div style='margin-bottom:6px;font-size:9px;'>I hereby certify that this report is made in compliance with the Minneapolis Code of Ordinances, Chapter 248.</div>";
   h += "<table><tr><td><b>Evaluator Name:</b> " + evalName + "</td><td><b>Phone:</b> " + evalPhone + "</td><td><b>Evaluation Date:</b> " + evalDate + "</td></tr>";
-  h += "<tr><td><b>Signature:</b> <i>" + evalName + "</i></td><td></td><td><b>Evaluation #:</b> " + evalNum + "</td></tr></table></div>";
+  h += "<tr><td><b>Signature:</b> <i>" + esc(evalName) + "</i></td><td><b>License #:</b> " + esc(evalLic) + "</td><td><b>Evaluation #:</b> " + esc(evalNum) + "</td></tr></table></div>";
   h += "<hr><div style='font-size:9px;text-align:center;color:#555;'>City of Minneapolis - Truth in Sale of Housing - 505 Fourth Ave S, Rm 320 - 612-673-5840</div>";
 
   document.getElementById("reportBody").innerHTML = h;
@@ -4085,7 +4617,7 @@ function closeReport() {
 // condition positions, codes, text and comments) so the output can be
 // re-mapped to the official format later without re-entering inspections.
 // =======================================
-var XML_FORMAT_VERSION = "provisional-2";
+var XML_FORMAT_VERSION = "provisional-3";
 
 function xmlEsc(s) {
   return String(s == null ? "" : s)
@@ -4097,18 +4629,20 @@ function getFormInfo() {
   function v(id) { var el = document.getElementById(id); return el ? el.value : ""; }
   return {
     address: v("fi-address"), evalName: v("fi-evalname"), evalPhone: v("fi-evalphone"),
-    date: v("fi-date"), evalNum: v("fi-evalnum"), ownerName: v("fi-ownername"),
-    ownerAddress: v("fi-owneraddress"), units: v("fi-units"), bldgType: v("fi-bldgtype"), zoning: v("fi-zoning")
+    date: v("fi-date"), evalNum: v("fi-evalnum"), evalLic: v("fi-evallic"),
+    units: String(units.length), bldgType: v("fi-bldgtype"), zoning: v("fi-zoning"), stories: v("fi-stories")
   };
 }
 
 function buildXML() {
   var f = getFormInfo();
   var hasRR = false;
-  categories.forEach(function(cat) {
-    rooms[cat.id].forEach(function(room) {
-      if (room.na) return;
-      cat.items.forEach(function(item) { if (itemHasRequired(item, room.itemStates[item.id])) hasRR = true; });
+  units.forEach(function(u) {
+    categories.forEach(function(cat) {
+      u.rooms[cat.id].forEach(function(room) {
+        if (room.na) return;
+        cat.items.forEach(function(item) { if (itemHasRequired(item, room.itemStates[item.id])) hasRR = true; });
+      });
     });
   });
 
@@ -4125,19 +4659,40 @@ function buildXML() {
   x.push('    <ObservedUnits>' + xmlEsc(f.units) + '</ObservedUnits>');
   x.push('    <BuildingType>' + xmlEsc(f.bldgType) + '</BuildingType>');
   x.push('    <Zoning>' + xmlEsc(f.zoning) + '</Zoning>');
+  x.push('    <NumberOfStories>' + xmlEsc(f.stories) + '</NumberOfStories>');
+  x.push('    <OwnerResidesAtProperty>' + xmlEsc(info.ownerResides) + '</OwnerResidesAtProperty>');
   x.push('  </Property>');
-  x.push('  <Owner>');
-  x.push('    <Name>' + xmlEsc(f.ownerName) + '</Name>');
-  x.push('    <Address>' + xmlEsc(f.ownerAddress) + '</Address>');
-  x.push('  </Owner>');
+  x.push('  <Owners>');
+  info.persons.forEach(function(p) {
+    x.push('    <Person primaryContact="' + !!p.primary + '">');
+    x.push('      <FirstName>' + xmlEsc(p.first) + '</FirstName>');
+    x.push('      <LastName>' + xmlEsc(p.last) + '</LastName>');
+    x.push('      <BusinessOrRelationship>' + xmlEsc(p.biz) + '</BusinessOrRelationship>');
+    x.push('      <Address>' + xmlEsc(p.addr) + '</Address>');
+    x.push('      <City>' + xmlEsc(p.city) + '</City>');
+    x.push('      <State>' + xmlEsc(p.state) + '</State>');
+    x.push('      <Zip>' + xmlEsc(p.zip) + '</Zip>');
+    x.push('      <Email>' + xmlEsc(p.email) + '</Email>');
+    [1, 2].forEach(function(n) {
+      var num = [p["p" + n + "a"], p["p" + n + "b"], p["p" + n + "c"]].join("");
+      if (num) x.push('      <Phone type="' + xmlEsc(p["p" + n + "type"]) + '" public="' + !!p["p" + n + "pub"] + '">' + xmlEsc(num) + '</Phone>');
+    });
+    x.push('    </Person>');
+  });
+  x.push('  </Owners>');
   x.push('  <Evaluator>');
   x.push('    <Name>' + xmlEsc(f.evalName) + '</Name>');
   x.push('    <Phone>' + xmlEsc(f.evalPhone) + '</Phone>');
+  x.push('    <LicenseNumber>' + xmlEsc(f.evalLic) + '</LicenseNumber>');
   x.push('  </Evaluator>');
-  x.push('  <Areas>');
+  x.push('  <Units>');
 
+  units.forEach(function(u, ui) {
+  var uRooms = u.rooms;
+  x.push('  <Unit number="' + (ui + 1) + '" label="' + xmlEsc(units.length > 1 ? unitName(ui) : "") + '">');
+  x.push('  <Areas>');
   categories.forEach(function(cat) {
-    rooms[cat.id].forEach(function(room, ri) {
+    uRooms[cat.id].forEach(function(room, ri) {
       x.push('    <Area areaType="' + xmlEsc(cat.areaType) + '" name="' + xmlEsc(cat.name) + '" roomNumber="' + (ri + 1) +
              '" label="' + xmlEsc(room.label) + '" notApplicable="' + !!room.na + '">');
 
@@ -4184,8 +4739,11 @@ function buildXML() {
       x.push('    </Area>');
     });
   });
-
   x.push('  </Areas>');
+  x.push('  </Unit>');
+  });
+
+  x.push('  </Units>');
   x.push('</EvaluationReport>');
   return x.join("\n");
 }
@@ -4238,8 +4796,27 @@ var CUR_KEY = "insp.currentId.v1";
     if (localStorage.getItem(STORE_KEY)) { localStorage.removeItem(OLD_STORE); localStorage.removeItem(OLD_CUR); }
   } catch (e) {}
 })();
-var FORM_IDS = ["fi-address","fi-evalname","fi-evalphone","fi-date","fi-evalnum","fi-ownername","fi-owneraddress","fi-units","fi-bldgtype","fi-zoning"];
-var FORM_DEFAULTS = { "fi-units":"1", "fi-bldgtype":"Single Family Home", "fi-zoning":"UN1" };
+var FORM_IDS = ["fi-address","fi-zoning","fi-bldgtype","fi-units","fi-stories","fi-evalname","fi-evalphone","fi-evallic","fi-date","fi-evalnum"];
+var FORM_DEFAULTS = { "fi-units":"1" };
+// Fields that are filled in automatically, so they don't count as "started"
+var AUTO_FIELDS = ["fi-date","fi-units","fi-evalname","fi-evalphone","fi-evallic"];
+
+// Evaluator name / phone / license remembered for every new inspection
+var EVAL_KEY = "insp.evaluator.v1";
+var EVAL_FIELDS = { "fi-evalname": "name", "fi-evalphone": "phone", "fi-evallic": "lic" };
+function saveEvaluatorProfile() {
+  var p = {};
+  Object.keys(EVAL_FIELDS).forEach(function(id) { p[EVAL_FIELDS[id]] = document.getElementById(id).value; });
+  try { localStorage.setItem(EVAL_KEY, JSON.stringify(p)); } catch (e) {}
+}
+function applyEvaluatorProfile() {
+  var p = {};
+  try { p = JSON.parse(localStorage.getItem(EVAL_KEY) || "{}") || {}; } catch (e) {}
+  Object.keys(EVAL_FIELDS).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && !el.value && p[EVAL_FIELDS[id]]) el.value = p[EVAL_FIELDS[id]];
+  });
+}
 var currentInspId = null;
 var storageOK = true;
 var saveTimer = null;
@@ -4281,21 +4858,58 @@ function hasData() {
   var f = readForm();
   for (var i = 0; i < FORM_IDS.length; i++) {
     var id = FORM_IDS[i];
-    if (id === "fi-date") continue;
+    if (AUTO_FIELDS.indexOf(id) >= 0) continue;
     if ((f[id] || "") !== (FORM_DEFAULTS[id] || "")) return true;
   }
-  return categories.some(function(cat) {
-    var list = rooms[cat.id];
-    if (list.length > 1) return true;
-    return list.some(function(r) {
-      if (r.label || r.na) return true;
-      if (Object.keys(r.extraData).some(function(k) { return r.extraData[k]; })) return true;
-      return Object.keys(r.itemStates).some(function(k) {
-        var s = r.itemStates[k];
-        return s.meetsReq || s.conditions.some(function(c) { return c.checked || c.comment; });
-      });
-    });
+  if (units.length > 1 || info.ownerResides || info.persons.length > 1) return true;
+  var bp = blankPerson(true);
+  if (info.persons.some(function(p) {
+    return Object.keys(bp).some(function(k) { return k !== "primary" && p[k] !== bp[k]; });
+  })) return true;
+  return units.some(function(u) {
+    return categories.some(function(cat) { return u.rooms[cat.id].length > 1; }) || unitHasData(u);
   });
+}
+
+// Load a saved inspection into the app (handles reports saved before units existed)
+function loadRecord(rec) {
+  var list = (rec.units && rec.units.length) ? rec.units : [{ label: "", rooms: rec.rooms }];
+  units = list.map(function(u) { return { label: u.label || "", rooms: restoreRooms(u.rooms) }; });
+  setUnit(0);
+  var ni = blankInfo();
+  if (rec.info && rec.info.persons && rec.info.persons.length) {
+    ni.ownerResides = rec.info.ownerResides || "";
+    ni.persons = rec.info.persons.map(function(p) {
+      var q = blankPerson(false);
+      Object.keys(q).forEach(function(k) { if (p[k] != null) q[k] = p[k]; });
+      return q;
+    });
+    if (!ni.persons.some(function(p) { return p.primary; })) ni.persons[0].primary = true;
+  } else if (rec.form) {
+    // Older reports kept the owner as one name line and one address line
+    var nm = String(rec.form["fi-ownername"] || "").trim();
+    var sp = nm.lastIndexOf(" ");
+    ni.persons[0].first = sp > 0 ? nm.slice(0, sp) : nm;
+    ni.persons[0].last = sp > 0 ? nm.slice(sp + 1) : "";
+    ni.persons[0].addr = String(rec.form["fi-owneraddress"] || "");
+    if (ni.persons[0].addr) ni.persons[0].state = "";
+  }
+  info = ni;
+  writeForm(rec.form || {});
+  var bt = document.getElementById("fi-bldgtype"), v = rec.form && rec.form["fi-bldgtype"];
+  if (v && bt.value !== v) { var o = document.createElement("option"); o.textContent = v; bt.appendChild(o); bt.value = v; }
+  document.getElementById("fi-units").value = String(units.length);
+  applyEvaluatorProfile();
+}
+
+function resetInspection() {
+  units = [{ label: "", rooms: restoreRooms(null) }];
+  setUnit(0);
+  info = blankInfo();
+  writeForm({});
+  applyEvaluatorProfile();
+  setCurrentId(newId());
+  lastSavedAt = null;
 }
 
 function saveNow() {
@@ -4312,7 +4926,8 @@ function saveNow() {
     savedAt: now.toISOString(),
     title: inspTitle(form),
     form: form,
-    rooms: rooms
+    info: info,
+    units: units.map(function(u) { return { label: u.label, rooms: u.rooms }; })
   };
   if (writeAll(all)) lastSavedAt = now;
   renderSaveBar();
@@ -4435,8 +5050,7 @@ function openInspection(id, skipSave) {
   if (skipSave) clearTimeout(saveTimer); else saveNow();
   var rec = loadAll()[id];
   if (!rec) { alert("That inspection could not be found."); return; }
-  rooms = restoreRooms(rec.rooms);
-  writeForm(rec.form);
+  loadRecord(rec);
   setCurrentId(id);
   lastSavedAt = rec.savedAt ? new Date(rec.savedAt) : null;
   showMain();
@@ -4445,11 +5059,9 @@ function openInspection(id, skipSave) {
 function newInspection(ask) {
   if (ask && hasData() && !confirm("Start a new inspection? The current one stays saved under Inspections.")) return;
   saveNow();
-  rooms = restoreRooms(null);
-  writeForm({});
-  setCurrentId(newId());
-  lastSavedAt = null;
-  showMain();
+  resetInspection();
+  renderSaveBar();
+  showOwner("new");
 }
 
 function deleteInspection(id, title) {
@@ -4457,12 +5069,7 @@ function deleteInspection(id, title) {
   var all = loadAll();
   delete all[id];
   writeAll(all);
-  if (id === currentInspId) {
-    rooms = restoreRooms(null);
-    writeForm({});
-    setCurrentId(newId());
-    lastSavedAt = null;
-  }
+  if (id === currentInspId) resetInspection();
   showInspections();
 }
 
@@ -4492,7 +5099,7 @@ function importBackup(input) {
       var all = loadAll();
       var added = 0, replaced = 0;
       data.inspections.forEach(function(rec) {
-        if (!rec || !rec.id || !rec.rooms) return;
+        if (!rec || !rec.id || !(rec.rooms || rec.units)) return;
         if (all[rec.id]) replaced++; else added++;
         all[rec.id] = rec;
       });
@@ -4514,6 +5121,14 @@ function importBackup(input) {
   reader.readAsText(file);
 }
 
+// Owner screen fields
+document.getElementById("personsBox").addEventListener("input", function(e) { if (e.target.hasAttribute("data-k")) readPersonField(e.target); });
+document.getElementById("personsBox").addEventListener("change", function(e) { if (e.target.hasAttribute("data-k")) readPersonField(e.target); });
+document.querySelectorAll("input[name=ownerResides]").forEach(function(r) {
+  r.addEventListener("change", function() { if (r.checked) ownerResidesChanged(r.value); });
+});
+document.addEventListener("input", function(e) { if (e.target && EVAL_FIELDS[e.target.id]) saveEvaluatorProfile(); });
+
 // Save on every edit, and when leaving or hiding the page
 document.addEventListener("input", scheduleSave);
 document.addEventListener("change", function(e) {
@@ -4529,12 +5144,12 @@ window.addEventListener("pagehide", saveNow);
   var cur = null;
   try { cur = localStorage.getItem(CUR_KEY); } catch (e) { storageOK = false; }
   if (cur && all[cur]) {
-    rooms = restoreRooms(all[cur].rooms);
-    writeForm(all[cur].form);
+    loadRecord(all[cur]);
     currentInspId = cur;
     lastSavedAt = all[cur].savedAt ? new Date(all[cur].savedAt) : null;
   } else {
     setCurrentId(newId());
+    applyEvaluatorProfile();
   }
 })();
 
