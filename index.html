@@ -571,7 +571,7 @@ body {
       <button onclick="startGeneratePDF()" style="flex:1;background:none;border:1px solid #1a2744;border-radius:6px;padding:10px;font-size:13px;font-family:inherit;cursor:pointer;color:#1a2744;">PDF only</button>
       <button onclick="runXMLOnly()" style="flex:1;background:none;border:1px solid #1a2744;border-radius:6px;padding:10px;font-size:13px;font-family:inherit;cursor:pointer;color:#1a2744;">XML only</button>
     </div>
-    <p style="font-size:11px;color:#777;padding-bottom:30px;margin-top:-20px;">XML format is provisional until the City provides its official specification.</p>
+    <p style="font-size:11px;color:#777;padding-bottom:30px;margin-top:-20px;">The XML uses the City&#39;s upload format. Upload it on the evaluation page in the City portal (Upload Report). Wall Insulation, Condo Conversion and General Area Comments are not in the XML yet; enter those on the portal.</p>
   </div>
 </div>
 
@@ -5089,13 +5089,13 @@ function closeReport() {
 
 
 // =======================================
-// XML EXPORT (provisional format)
+// XML EXPORT (City of Minneapolis upload format)
 // Structure is our own until the City supplies its official schema.
 // Everything the City could need is included (item numbers, internal ids,
 // condition positions, codes, text and comments) so the output can be
 // re-mapped to the official format later without re-entering inspections.
 // =======================================
-var XML_FORMAT_VERSION = "provisional-3";
+var XML_FORMAT_VERSION = "city-1";
 
 function xmlEsc(s) {
   return String(s == null ? "" : s)
@@ -5112,116 +5112,108 @@ function getFormInfo() {
   };
 }
 
+// City upload format (from the City's Sample_Evaluation_Upload.xml):
+// units > areas (area_type, area_label, not_applicable) > analytics + items (item_id) > conditions (condition_type = ConditionTypeID)
+var XML_ANALYTICS = {
+  "amp": "Amps", "volts": "Volts",
+  "wh-type": "WaterHeaterType", "wh-vent": "WaterHeaterVentingType", "wh-age": "WaterHeaterAge",
+  "hs-type": "HeatingSystemType", "hs-vent": "HeatingSystemVentingType", "hs-age": "HeatingSystemAge",
+  "ac-type": "AirConditionerType", "ac-age": "AirConditionerAge",
+  "dryer-type": "LaundryDryerType", "dryer-volt": "LaundryDryerVolts",
+  "cook-type": "KitchenCookingApplianceType", "cook-volt": "KitchenCookingApplianceVolts",
+  "attic-area": "AtticType", "attic-access": "AtticIsAccessible", "attic-sqft": "AtticAreaSquareFeet",
+  "attic-depth": "AtticInsulationDepth", "attic-instype": "AtticInsulationType",
+  "ext-singlepane": "SinglePaneWindows"
+};
+// Sections the City sample doesn't show, so their XML names are unknown: fill these in on the portal
+var XML_SKIP_AREAS = { "wall-insulation": true, "condo": true };
+
+function xmlAnalyticValue(key, v) {
+  v = String(v == null ? "" : v).trim();
+  if (!v) return "";
+  var ages = {
+    "Less than 8 years old": "7", "8 years or older": "8",
+    "Less than 20 years old": "19", "20 years or older": "20",
+    "Less than 15 years old": "14", "15 years or older": "15",
+    "Undetermined": ""
+  };
+  if (ages.hasOwnProperty(v)) return ages[v];
+  if (v === "N/A (no outlet)") return "0";
+  if (v === "N/A") return "";
+  if (key === "attic-access") return v === "Yes" ? "true" : (v === "No" ? "false" : v.toLowerCase());
+  if (/^(amp|volts|attic-sqft|attic-depth|ext-singlepane|dryer-volt|cook-volt)$/.test(key)) return v;
+  return v.toLowerCase();
+}
+
+// Element text: escape only what XML requires (matches the City sample)
+function xmlText(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function buildXML() {
-  var f = getFormInfo();
-  var hasRR = false;
-  units.forEach(function(u) {
+  var x = [];
+  var skipped = [];
+  x.push('<?xml version="1.0" encoding="utf-8" ?>');
+  x.push("<tish_evaluation xmlns='urn:evaluation-schema'>");
+  x.push('<evaluation_units>');
+  units.forEach(function(u, ui) {
+    x.push('<evaluation_unit name="' + xmlEsc(units.length > 1 ? unitName(ui) : "") + '">');
+    x.push('<evaluation_areas>');
     categories.forEach(function(cat) {
       u.rooms[cat.id].forEach(function(room) {
-        if (room.na) return;
-        cat.items.forEach(function(item) { if (itemHasRequired(item, room.itemStates[item.id])) hasRR = true; });
+        var started = room.na || Object.keys(room.itemStates).some(function(k) {
+          var st = room.itemStates[k];
+          return st.meetsReq || st.conditions.some(function(c) { return c.checked; });
+        }) || Object.keys(room.extraData || {}).some(function(k) { return room.extraData[k]; });
+        if (!started) return;
+        if (XML_SKIP_AREAS[cat.id]) { if (skipped.indexOf(cat.name) < 0) skipped.push(cat.name); return; }
+
+        x.push('<evaluation_area area_type="' + xmlEsc(cat.areaType) + '" area_label="' + xmlEsc(room.label || "") +
+               '" not_applicable="' + (room.na ? "true" : "false") + '">');
+
+        var an = [];
+        (cat.extraFields || []).forEach(function(fd) {
+          var name = XML_ANALYTICS[fd.key];
+          if (!name) return;
+          var val = xmlAnalyticValue(fd.key, room.extraData[fd.key]);
+          if (val !== "") an.push('<area_analytic analytic_name="' + name + '">' + xmlText(val) + '</area_analytic>');
+        });
+        if (an.length) { x.push('<area_analytics>'); an.forEach(function(l) { x.push(l); }); x.push('</area_analytics>'); }
+
+        x.push('<area_items>');
+        cat.items.forEach(function(item) {
+          var s = room.itemStates[item.id];
+          var lines = [];
+          if (room.na) {
+            var naC = item.conditions.filter(function(cd) { return cd.code === "NA" && cd.cid; })[0];
+            if (naC) lines.push('<condition condition_type="' + naC.cid + '"/>');
+          } else {
+            if (s.meetsReq && item.mid) lines.push('<condition condition_type="' + item.mid + '"/>');
+            s.conditions.forEach(function(cst, ci) {
+              if (!cst.checked) return;
+              var cond = item.conditions[ci];
+              if (!cond.cid) return;   // no City ID for this one
+              var cm = String(cst.comment || "").trim();
+              lines.push('<condition condition_type="' + cond.cid + '">' + xmlText(cm) + '</condition>');
+            });
+          }
+          if (!lines.length) return;
+          x.push('<area_item item_id="' + xmlEsc(item.itemType) + '">');
+          x.push('<conditions>');
+          lines.forEach(function(l) { x.push(l); });
+          x.push('</conditions>');
+          x.push('</area_item>');
+        });
+        x.push('</area_items>');
+        x.push('</evaluation_area>');
       });
     });
+    x.push('</evaluation_areas>');
+    x.push('</evaluation_unit>');
   });
-
-  var x = [];
-  x.push('<?xml version="1.0" encoding="UTF-8"?>');
-  x.push('<EvaluationReport formatVersion="' + XML_FORMAT_VERSION + '" city="Minneapolis" generatedAt="' + new Date().toISOString() + '">');
-  x.push('  <Evaluation>');
-  x.push('    <EvaluationDate>' + xmlEsc(f.date) + '</EvaluationDate>');
-  x.push('    <HasRequiredRepairs>' + hasRR + '</HasRequiredRepairs>');
-  x.push('  </Evaluation>');
-  x.push('  <Property>');
-  x.push('    <Address>' + xmlEsc(f.address) + '</Address>');
-  x.push('    <ObservedUnits>' + xmlEsc(f.units) + '</ObservedUnits>');
-  x.push('    <BuildingType>' + xmlEsc(f.bldgType) + '</BuildingType>');
-  x.push('    <Zoning>' + xmlEsc(f.zoning) + '</Zoning>');
-  x.push('    <NumberOfStories>' + xmlEsc(f.stories) + '</NumberOfStories>');
-  x.push('    <OwnerResidesAtProperty>' + xmlEsc(info.ownerResides) + '</OwnerResidesAtProperty>');
-  x.push('  </Property>');
-  x.push('  <Owners>');
-  info.persons.forEach(function(p) {
-    x.push('    <Person primaryContact="' + !!p.primary + '">');
-    x.push('      <FirstName>' + xmlEsc(p.first) + '</FirstName>');
-    x.push('      <LastName>' + xmlEsc(p.last) + '</LastName>');
-    x.push('      <BusinessOrRelationship>' + xmlEsc(p.biz) + '</BusinessOrRelationship>');
-    x.push('      <Address>' + xmlEsc(p.addr) + '</Address>');
-    x.push('      <City>' + xmlEsc(p.city) + '</City>');
-    x.push('      <State>' + xmlEsc(p.state) + '</State>');
-    x.push('      <Zip>' + xmlEsc(p.zip) + '</Zip>');
-    x.push('      <Email>' + xmlEsc(p.email) + '</Email>');
-    [1, 2].forEach(function(n) {
-      var num = String(p["p" + n + "num"] || "").trim();
-      if (num) x.push('      <Phone type="' + xmlEsc(p["p" + n + "type"]) + '" public="' + !!p["p" + n + "pub"] + '">' + xmlEsc(num) + '</Phone>');
-    });
-    x.push('    </Person>');
-  });
-  x.push('  </Owners>');
-  x.push('  <Evaluator>');
-  x.push('    <Name>' + xmlEsc(f.evalName) + '</Name>');
-  x.push('    <Phone>' + xmlEsc(f.evalPhone) + '</Phone>');
-  x.push('    <LicenseNumber>' + xmlEsc(f.evalLic) + '</LicenseNumber>');
-  x.push('  </Evaluator>');
-  x.push('  <Units>');
-
-  units.forEach(function(u, ui) {
-  var uRooms = u.rooms;
-  x.push('  <Unit number="' + (ui + 1) + '" label="' + xmlEsc(units.length > 1 ? unitName(ui) : "") + '">');
-  x.push('  <Areas>');
-  categories.forEach(function(cat) {
-    uRooms[cat.id].forEach(function(room, ri) {
-      x.push('    <Area areaType="' + xmlEsc(cat.areaType) + '" name="' + xmlEsc(cat.name) + '" roomNumber="' + (ri + 1) +
-             '" label="' + xmlEsc(room.label) + '" notApplicable="' + !!room.na + '">');
-
-      if (cat.extraFields) {
-        x.push('      <AreaInformation>');
-        cat.extraFields.forEach(function(fd) {
-          x.push('        <Field key="' + xmlEsc(fd.key) + '" label="' + xmlEsc(fd.label.replace(/:$/, "")) + '">' +
-                 xmlEsc(room.extraData[fd.key] || "") + '</Field>');
-        });
-        x.push('      </AreaInformation>');
-      }
-
-      var area = room.itemStates[AREA_ID];
-      if (cat.areaConditions && area) {
-        x.push('      <GeneralAreaComments>');
-        area.conditions.forEach(function(cst, ci) {
-          if (!cst.checked) return;
-          x.push('        <AreaComment position="' + (ci + 1) + '" text="' + xmlEsc(cat.areaConditions[ci].text) + '">' +
-                 xmlEsc(cst.comment) + '</AreaComment>');
-        });
-        x.push('      </GeneralAreaComments>');
-      }
-
-      if (cat.items.length) {
-        x.push('      <Items>');
-        cat.items.forEach(function(item, idx) {
-          var s = room.itemStates[item.id];
-          var num = (cat.itemStartIndex || 1) + idx;
-          x.push('        <Item number="' + num + '" itemType="' + xmlEsc(item.itemType) + '" name="' + xmlEsc(item.name) +
-                 '" meetsRequirements="' + !!s.meetsReq + '">');
-          if (s.meetsReq && item.mid) {
-            x.push('          <Condition conditionTypeId="' + item.mid + '" code="M" required="false" text="Meets Minimum Requirements"></Condition>');
-          }
-          s.conditions.forEach(function(cst, ci) {
-            if (!cst.checked) return;
-            var cond = item.conditions[ci];
-            x.push('          <Condition conditionTypeId="' + (cond.cid || "") + '" code="' + xmlEsc(cond.code) + '" required="' +
-                   isRequired(cond.code) + '" text="' + xmlEsc(cond.text) + '">' + xmlEsc(cst.comment) + '</Condition>');
-          });
-          x.push('        </Item>');
-        });
-        x.push('      </Items>');
-      }
-      x.push('    </Area>');
-    });
-  });
-  x.push('  </Areas>');
-  x.push('  </Unit>');
-  });
-
-  x.push('  </Units>');
-  x.push('</EvaluationReport>');
+  x.push('</evaluation_units>');
+  x.push('</tish_evaluation>');
+  buildXML.skipped = skipped;
   return x.join("\n");
 }
 
