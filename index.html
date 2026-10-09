@@ -544,7 +544,7 @@ body {
         </div>
         <div>
           <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluator Phone</label>
-          <input id="fi-evalphone" type="tel" placeholder="612-000-0000" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
+          <input id="fi-evalphone" type="text" placeholder="612-000-0000" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -731,6 +731,7 @@ body {
   </table>
   <div class="cat-actions">
     <button class="btn-cancel" onclick="goBackFromCategory()">Back</button>
+    <button id="catDeleteRoom" type="button" onclick="deleteCurrentRoom()" style="display:none;background:none;border:1px solid #cc3300;color:#cc3300;border-radius:5px;padding:9px 16px;font-size:14px;font-weight:bold;cursor:pointer;font-family:inherit;">Delete Room</button>
     <button class="btn-save" onclick="saveCategory()">Save</button>
   </div>
 </div>
@@ -3571,7 +3572,7 @@ function unitTag() { return units.length > 1 ? unitName(curUnit) : ""; }
 
 function blankPerson(primary) {
   return { primary: !!primary, first: "", last: "", biz: "", addr: "", city: "", state: "MN", zip: "", email: "",
-           p1a: "", p1b: "", p1c: "", p1type: "", p1pub: true, p2a: "", p2b: "", p2c: "", p2type: "", p2pub: true };
+           p1num: "", p1type: "", p1pub: true, p2num: "", p2type: "", p2pub: true };
 }
 function blankInfo() { return { ownerResides: "", persons: [blankPerson(true)] }; }
 function primaryPerson() {
@@ -3579,9 +3580,9 @@ function primaryPerson() {
 }
 function personName(p) { return [p.first, p.last].filter(Boolean).join(" "); }
 function personPhone(p, n) {
-  var a = p["p" + n + "a"], b = p["p" + n + "b"], d = p["p" + n + "c"];
-  if (!a && !b && !d) return "";
-  return (a ? "(" + a + ") " : "") + [b, d].filter(Boolean).join("-") + (p["p" + n + "type"] ? " " + p["p" + n + "type"] : "");
+  var num = String(p["p" + n + "num"] || "").trim();
+  if (!num) return "";
+  return num + (p["p" + n + "type"] ? " " + p["p" + n + "type"] : "");
 }
 function personAddress(p) {
   var line2 = (p.city || p.zip) ? [p.city, [p.state, p.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") : "";
@@ -3835,10 +3836,8 @@ function renderPersons() {
       return s + '</select>';
     }
     function phone(n, req) {
-      return '<label>' + (req ? '<span class="req-star">*</span> ' : '') + 'Phone</label><div class="phone-row">( ' +
-        inp("p" + n + "a", 'inputmode="numeric" maxlength="3" size="3" style="width:56px;"') + ' ) ' +
-        inp("p" + n + "b", 'inputmode="numeric" maxlength="3" size="3" style="width:56px;"') + ' ' +
-        inp("p" + n + "c", 'inputmode="numeric" maxlength="4" size="4" style="width:70px;"') + ' ' +
+      return '<label>' + (req ? '<span class="req-star">*</span> ' : '') + 'Phone</label><div class="phone-row">' +
+        inp("p" + n + "num", 'type="text" autocomplete="off" placeholder="612-555-0123" style="width:190px;"') + ' ' +
         sel("p" + n + "type", PHONE_TYPES, "-- Select Phone Type --") +
         ' <label style="font-weight:normal;display:inline-flex;gap:4px;align-items:center;"><input type="checkbox" data-i="' + i + '" data-k="p' + n + 'pub"' + (p["p" + n + "pub"] ? " checked" : "") + '> Is Public</label></div>';
     }
@@ -3905,7 +3904,7 @@ function ownerNext() {
   a.classList.toggle("req-empty", !a.value.trim());
   if (!a.value.trim()) missing = true;
   var p = primaryPerson(), pi = info.persons.indexOf(p);
-  ["first", "last", "addr", "city", "state", "zip", "p1a", "p1b", "p1c"].forEach(function(k) {
+  ["first", "last", "addr", "city", "state", "zip", "p1num"].forEach(function(k) {
     var el = document.querySelector('#personsBox [data-i="' + pi + '"][data-k="' + k + '"]');
     var empty = !String(p[k] || "").trim();
     if (el) el.classList.toggle("req-empty", empty);
@@ -4091,9 +4090,17 @@ function deleteRoom(catId, roomIdx) {
     alert("Cannot delete the only room.");
     return;
   }
-  if (!confirm("Delete this room and all its data?")) return;
+  var cat = categories.find(function(c) { return c.id === catId; });
+  var r = rooms[catId][roomIdx];
+  var nm = cat.name + " " + (roomIdx + 1) + (r.label ? " (" + r.label + ")" : "");
+  if (!confirm("Delete " + nm + " and everything entered for it?")) return;
   rooms[catId].splice(roomIdx, 1);
-  showRoomPicker(catId);
+  scheduleSave();
+  if (rooms[catId].length > 1) showRoomPicker(catId); else showMain();
+}
+
+function deleteCurrentRoom() {
+  deleteRoom(currentCatId, currentRoomIdx);
 }
 
 // =======================================
@@ -4107,6 +4114,7 @@ function openCategory(catId, roomIdx) {
   var roomLabel = rooms[catId].length > 1 ? (" (Room " + (roomIdx + 1) + ")") : "";
 
   document.getElementById("catScreenTitle").textContent = (unitTag() ? unitTag() + " > " : "") + cat.name + roomLabel;
+  document.getElementById("catDeleteRoom").style.display = rooms[catId].length > 1 ? "" : "none";
   document.getElementById("catNACheck").checked = room.na;
   document.getElementById("catLabelInput").value = room.label || "";
   document.getElementById("catLabelCaption").style.display = cat.noLabel ? "none" : "";
@@ -4760,7 +4768,7 @@ function buildXML() {
     x.push('      <Zip>' + xmlEsc(p.zip) + '</Zip>');
     x.push('      <Email>' + xmlEsc(p.email) + '</Email>');
     [1, 2].forEach(function(n) {
-      var num = [p["p" + n + "a"], p["p" + n + "b"], p["p" + n + "c"]].join("");
+      var num = String(p["p" + n + "num"] || "").trim();
       if (num) x.push('      <Phone type="' + xmlEsc(p["p" + n + "type"]) + '" public="' + !!p["p" + n + "pub"] + '">' + xmlEsc(num) + '</Phone>');
     });
     x.push('    </Person>');
@@ -4967,6 +4975,11 @@ function loadRecord(rec) {
     ni.persons = rec.info.persons.map(function(p) {
       var q = blankPerson(false);
       Object.keys(q).forEach(function(k) { if (p[k] != null) q[k] = p[k]; });
+      [1, 2].forEach(function(n) {
+        if (!q["p" + n + "num"] && (p["p" + n + "a"] || p["p" + n + "b"] || p["p" + n + "c"])) {
+          q["p" + n + "num"] = [p["p" + n + "a"], p["p" + n + "b"], p["p" + n + "c"]].filter(Boolean).join("-");
+        }
+      });
       return q;
     });
     if (!ni.persons.some(function(p) { return p.primary; })) ni.persons[0].primary = true;
