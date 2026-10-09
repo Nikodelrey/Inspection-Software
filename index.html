@@ -553,12 +553,6 @@ body {
           <input id="fi-evallic" type="text" placeholder="License number" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div>
-          <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluation #</label>
-          <input id="fi-evalnum" type="text" placeholder="Evaluation number" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div>
           <label style="font-size:12px;font-weight:bold;color:#333;display:block;margin-bottom:3px;">Evaluation Date</label>
           <input id="fi-date" type="date" style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;">
         </div>
@@ -4495,7 +4489,6 @@ function generatePDF() {
   var evalDate = rawDate ? (function(d){ var p=d.split("-"); return p[1]+"/"+p[2]+"/"+p[0]; })(rawDate) : new Date().toLocaleDateString();
   var evalName = document.getElementById("fi-evalname").value || "";
   var evalPhone = document.getElementById("fi-evalphone").value || "";
-  var evalNum = document.getElementById("fi-evalnum").value || "";
   var evalLic = document.getElementById("fi-evallic").value || "";
   var esc = function(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
   var pp = primaryPerson();
@@ -4516,14 +4509,23 @@ function generatePDF() {
   css += R + ".ires{font-size:10px;padding:1px 0 4px 20px;color:#333;}";
   css += R + ".codes{border:1px solid #ccc;padding:6px;margin:8px 0;font-size:9px;background:#f9f9f9;}";
   css += R + ".sig{border:1px solid #ccc;padding:8px;margin:10px 0;font-size:10px;}";
-  css += R + "table{width:100%;border-collapse:collapse;}" + R + "td{padding:3px 6px;font-size:10px;vertical-align:top;}</style>";
+  css += R + "table{width:100%;border-collapse:collapse;}" + R + "td{padding:3px 6px;font-size:10px;vertical-align:top;}";
+  css += R + ".rn{page-break-before:always;break-before:page;padding-top:4px;}";
+  css += R + ".rn-head{text-align:center;font-size:12px;line-height:1.5;margin:14px 0;}";
+  css += R + ".rn-head b{font-size:13px;}";
+  css += R + ".rn p{font-size:10px;line-height:1.4;margin:6px 0;}";
+  css += R + ".rn h4{font-size:11px;margin:14px 0 4px 0;}";
+  css += R + ".rn-tbl{width:100%;border-collapse:collapse;margin-top:4px;}";
+  css += R + ".rn-tbl th{text-align:left;font-size:10px;padding:4px 6px;border-bottom:1px solid #000;}";
+  css += R + ".rn-tbl td{font-size:10px;padding:3px 6px;vertical-align:top;page-break-inside:avoid;}";
+  css += R + ".rn-foot{border-top:1px solid #000;margin-top:16px;padding-top:4px;font-size:10px;}</style>";
 
   var h = css;
   h += "<h1>Truth in Sale of Housing Disclosure Report</h1>";
   h += "<div style='font-size:9px;color:#555;margin-bottom:6px;'>NOTICE - Read Entire Report Carefully. This is not a rental license inspection or a buyers inspection!</div>";
   h += "<div><b>Address:</b> " + address + "</div><hr>";
   h += "<table><tr><td><b>Current Owner Name:</b> " + ownerName + "</td><td><b>Contact:</b> " + contact + "</td></tr>";
-  h += "<tr><td><b>Owner Address:</b> " + ownerAddress + "</td><td><b>Evaluation #:</b> " + evalNum + "</td></tr></table><hr>";
+  h += "<tr><td><b>Owner Address:</b> " + ownerAddress + "</td><td><b>Evaluation Date:</b> " + evalDate + "</td></tr></table><hr>";
 
   var hasRR = false;
   units.forEach(function(u) {
@@ -4596,12 +4598,97 @@ function generatePDF() {
   h += "<div class='sig'>";
   h += "<div style='margin-bottom:6px;font-size:9px;'>I hereby certify that this report is made in compliance with the Minneapolis Code of Ordinances, Chapter 248.</div>";
   h += "<table><tr><td><b>Evaluator Name:</b> " + evalName + "</td><td><b>Phone:</b> " + evalPhone + "</td><td><b>Evaluation Date:</b> " + evalDate + "</td></tr>";
-  h += "<tr><td><b>Signature:</b> <i>" + esc(evalName) + "</i></td><td><b>License #:</b> " + esc(evalLic) + "</td><td><b>Evaluation #:</b> " + esc(evalNum) + "</td></tr></table></div>";
-  h += "<hr><div style='font-size:9px;text-align:center;color:#555;'>City of Minneapolis - Truth in Sale of Housing - 505 Fourth Ave S, Rm 320 - 612-673-5840</div>";
+  h += "<tr><td><b>Signature:</b> <i>" + esc(evalName) + "</i></td><td><b>License #:</b> " + esc(evalLic) + "</td><td></td></tr></table></div>";
+  h += "<hr><div style='font-size:9px;text-align:center;color:#555;'>City of Minneapolis - Truth in Sale of Housing - 250 South 4th Street, Room 300, Minneapolis, MN 55415 - 612-673-5840</div>";
+  h += buildRepairNotification(address, evalName, evalDate, esc);
 
   document.getElementById("reportBody").innerHTML = h;
   document.title = "Report - " + address;
   showScreen("screen-report");
+}
+
+// =======================================
+// TRUTH IN HOUSING REPAIR NOTIFICATION (end of report)
+// Lists every RRE (Required Repairs), LIC (Safety Checks) and RRP (Permit Required Repair)
+// =======================================
+function collectRepairs() {
+  var out = { RRE: [], LIC: [], RRP: [] };
+  units.forEach(function(u, ui) {
+    categories.forEach(function(cat) {
+      var list = u.rooms[cat.id];
+      list.forEach(function(room, ri) {
+        if (room.na) return;
+        var where = (units.length > 1 ? unitName(ui) + " - " : "") + cat.name +
+          (room.label ? "(" + room.label + ")" : (list.length > 1 ? "(Room " + (ri + 1) + ")" : ""));
+        cat.items.forEach(function(item, idx) {
+          var s = room.itemStates[item.id];
+          s.conditions.forEach(function(cst, ci) {
+            if (!cst.checked) return;
+            var cond = item.conditions[ci];
+            if (!out[cond.code]) return;
+            var cm = (cst.comment || "").trim();
+            out[cond.code].push({
+              id: (cat.itemStartIndex || 1) + idx,
+              desc: item.name,
+              area: where,
+              comment: cond.text + (cm ? " - " + cm : "")
+            });
+          });
+        });
+      });
+    });
+  });
+  return out;
+}
+
+function buildRepairNotification(address, evalName, evalDate, esc) {
+  var r = collectRepairs();
+  var pp = primaryPerson();
+  var today = new Date();
+  var noticeDate = (today.getMonth() + 1) + "/" + today.getDate() + "/" + today.getFullYear();
+
+  function table(rows) {
+    if (!rows.length) return "<p style='font-weight:bold;font-size:11px;'>NONE</p>";
+    var t = "<table class='rn-tbl'><tr><th style='width:7%;'>ID</th><th style='width:24%;'>Description</th><th style='width:27%;'>Area</th><th>Comment</th></tr>";
+    rows.forEach(function(x) {
+      t += "<tr><td>" + x.id + "</td><td>" + esc(x.desc) + "</td><td>" + esc(x.area) + "</td><td>" + esc(x.comment) + "</td></tr>";
+    });
+    return t + "</table>";
+  }
+
+  var h = "<div class='rn'>";
+  h += "<h1>Truth in Sale of Housing Disclosure Report</h1>";
+  h += "<div><b>Address:</b> " + address + "</div>";
+  h += "<div class='rn-head'><b>Truth in Housing Repair Notification</b><br>City of Minneapolis - Truth in Sale of Housing<br>250 South 4th Street, Room 300<br>Minneapolis, MN 55415</div>";
+
+  var cityLine = [pp.city, [pp.state, pp.zip].filter(Boolean).join("  ")].filter(Boolean).join(", ");
+  h += "<table><tr><td style='font-size:11px;'><b>Issued To:</b><div style='padding:4px 0 0 40px;line-height:1.45;'>" +
+       [personName(pp), pp.biz, pp.addr, cityLine].filter(Boolean).map(esc).join("<br>") +
+       "</div></td><td style='text-align:right;font-size:11px;'>" + noticeDate + "</td></tr></table>";
+
+  h += "<p style='text-align:center;font-size:11px;margin:12px 0;'>Owner does not have to complete repairs if the house is not sold.</p>";
+  h += "<p>Pursuant to Minneapolis Code of Ordinances, Sections 248.20 and 248.225, the owner may make the repairs. If the owner makes the repairs, a Certificate of Approval (needed for closing) will be issued after the repairs have been inspected and approved. The owner does not have to complete the repairs if the house does not sell. If the owner does not make the repairs, the buyer must sign an acknowledgement of responsibility form (provided by the City) and return it to the City. The buyer has 90 days from closing to complete the repairs. Your prompt cooperation in attending to the repair items is appreciated however, failure to comply by these deadlines may result in legal action.</p>";
+
+  h += "<h4>REQUIRED REPAIRS</h4>" + table(r.RRE);
+
+  h += "<h4>SAFETY CHECKS</h4>";
+  h += "<p>The systems listed below must be checked by a licensed contractor. The contractor must be licensed by the City of Minneapolis and/or the State of Minnesota in that specific trade to check the work. Return safety check forms to the address above or fax to (612) 673-2437. If &ldquo;Evaluator Return&rdquo; is indicated below, the evaluator may return to view the system that was not in operation at the time of the initial evaluation. The evaluator may find additional work is needed on the system.</p>";
+  h += "<p>If the system was repaired or replaced, only a licensed contractor (not the evaluator) can do the safety check. Permits may be needed.</p>";
+  h += table(r.LIC);
+
+  h += "<h4>PERMIT REQUIRED REPAIR</h4>";
+  h += "<p>The permit must be pulled before scheduling. Call the inspector listed on the permit to set an appointment. You need to have the permit number to set the appointment. There will be a charge for the permit, which covers the inspection.</p>";
+  h += table(r.RRP);
+
+  h += "<h4>Reinspection Process</h4><p>When all the items are completed they must be inspected and approved.</p>";
+  h += "<h4><i>For items that need a permit:</i></h4><p>If your notification indicates PERMIT NEEDED, the permit(s) must be pulled and work completed BEFORE the re-inspection takes place. If you are a homeowner occupant of a single family house, you may obtain a permit, if you are not, you must hire a licensed contractor. Bring this notification with you when you apply for permits.</p>";
+  h += "<h4><i>For items that do not need a permit:</i></h4><p>Call the evaluator who did the initial TISH report to re-inspect all the non-permit items. The evaluator&rsquo;s name and phone number are on the bottom of page 1 of the report. There will be a charge for this inspection.</p>";
+  h += "<h4>Appeal</h4><p>This repair notice may be appealed. Section 248.150 of the Minneapolis Code of Ordinances provides that an appeal must be filed in writing within thirty (30) days of the date of this notice accompanied with a $100 filing fee. If you wish to appeal this order, call (612) 673-5840 for an application.</p>";
+  h += "<h4>Assistance</h4><p>If you need financial assistance to complete these repairs, you may call the Center for Energy and Environment at 612-335-5884.</p>";
+
+  h += "<div class='rn-foot'><table><tr><td><b>Evaluator Name:</b> " + esc(evalName) + "</td><td><b>Evaluation Date:</b> " + evalDate + "</td></tr></table></div>";
+  h += "</div>";
+  return h;
 }
 
 function closeReport() {
@@ -4629,7 +4716,7 @@ function getFormInfo() {
   function v(id) { var el = document.getElementById(id); return el ? el.value : ""; }
   return {
     address: v("fi-address"), evalName: v("fi-evalname"), evalPhone: v("fi-evalphone"),
-    date: v("fi-date"), evalNum: v("fi-evalnum"), evalLic: v("fi-evallic"),
+    date: v("fi-date"), evalLic: v("fi-evallic"),
     units: String(units.length), bldgType: v("fi-bldgtype"), zoning: v("fi-zoning"), stories: v("fi-stories")
   };
 }
@@ -4650,7 +4737,6 @@ function buildXML() {
   x.push('<?xml version="1.0" encoding="UTF-8"?>');
   x.push('<EvaluationReport formatVersion="' + XML_FORMAT_VERSION + '" city="Minneapolis" generatedAt="' + new Date().toISOString() + '">');
   x.push('  <Evaluation>');
-  x.push('    <EvaluationNumber>' + xmlEsc(f.evalNum) + '</EvaluationNumber>');
   x.push('    <EvaluationDate>' + xmlEsc(f.date) + '</EvaluationDate>');
   x.push('    <HasRequiredRepairs>' + hasRR + '</HasRequiredRepairs>');
   x.push('  </Evaluation>');
@@ -4750,7 +4836,7 @@ function buildXML() {
 
 function xmlFileName() {
   var f = getFormInfo();
-  var base = f.evalNum || f.address || "report";
+  var base = f.address || "report";
   base = base.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "report";
   return "Report_" + base + "_" + (f.date || new Date().toISOString().slice(0, 10)) + ".xml";
 }
@@ -4796,7 +4882,7 @@ var CUR_KEY = "insp.currentId.v1";
     if (localStorage.getItem(STORE_KEY)) { localStorage.removeItem(OLD_STORE); localStorage.removeItem(OLD_CUR); }
   } catch (e) {}
 })();
-var FORM_IDS = ["fi-address","fi-zoning","fi-bldgtype","fi-units","fi-stories","fi-evalname","fi-evalphone","fi-evallic","fi-date","fi-evalnum"];
+var FORM_IDS = ["fi-address","fi-zoning","fi-bldgtype","fi-units","fi-stories","fi-evalname","fi-evalphone","fi-evallic","fi-date"];
 var FORM_DEFAULTS = { "fi-units":"1" };
 // Fields that are filled in automatically, so they don't count as "started"
 var AUTO_FIELDS = ["fi-date","fi-units","fi-evalname","fi-evalphone","fi-evallic"];
@@ -4849,8 +4935,7 @@ function writeForm(f) {
 }
 function inspTitle(form) {
   var a = (form["fi-address"] || "").trim();
-  var n = (form["fi-evalnum"] || "").trim();
-  return a || (n ? "Evaluation #" + n : "Untitled inspection");
+  return a || "Untitled inspection";
 }
 
 // True once anything has been entered (date alone does not count; it is auto-filled)
@@ -5031,7 +5116,7 @@ function showInspections() {
     var info = document.createElement("button");
     info.className = "main-link";
     info.style.flex = "1";
-    var num = rec.form && rec.form["fi-evalnum"] ? "Eval #" + rec.form["fi-evalnum"] + " \u00B7 " : "";
+    var num = "";
     info.innerHTML = "<span></span><div style='font-size:11px;color:#666;font-weight:normal;text-decoration:none;'></div>";
     info.firstChild.textContent = rec.title + (rec.id === currentInspId ? "  (open now)" : "");
     info.lastChild.textContent = num + "Saved " + fmtTime(new Date(rec.savedAt));
