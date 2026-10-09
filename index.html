@@ -4920,9 +4920,52 @@ function loadAll() {
   try { var s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : {}; }
   catch (e) { storageOK = false; return {}; }
 }
+var storageWarned = false;
 function writeAll(all) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(all)); storageOK = true; return true; }
-  catch (e) { storageOK = false; return false; }
+  catch (e) {
+    storageOK = false;
+    if (!storageWarned) {
+      storageWarned = true;
+      alert("Saving failed: this iPad's storage for the app is full. Tap Inspections, Export backup, then delete finished inspections you no longer need.");
+    }
+    return false;
+  }
+}
+
+// Store only what was actually entered (checked boxes, comments, labels, dropdowns).
+// Keeps each saved inspection a few KB instead of ~90 KB.
+function compactRooms(rs) {
+  var out = {};
+  categories.forEach(function(cat) {
+    out[cat.id] = (rs[cat.id] || []).map(function(r) {
+      var o = { label: r.label || "", na: !!r.na };
+      var ex = {};
+      Object.keys(r.extraData || {}).forEach(function(k) { if (r.extraData[k]) ex[k] = r.extraData[k]; });
+      if (Object.keys(ex).length) o.extraData = ex;
+      var its = {};
+      Object.keys(r.itemStates || {}).forEach(function(iid) {
+        var s = r.itemStates[iid], cs = [];
+        s.conditions.forEach(function(cd, i) {
+          if (cd.checked || cd.comment) cs.push({ i: i, cid: cd.cid || null, checked: !!cd.checked, comment: cd.comment || "" });
+        });
+        if (s.meetsReq || cs.length) its[iid] = { sparse: 1, meetsReq: !!s.meetsReq, conditions: cs };
+      });
+      o.itemStates = its;
+      return o;
+    });
+  });
+  return out;
+}
+
+// Shrink a stored record (any older format) to the compact format
+function compactRecord(rec) {
+  var list = (rec.units && rec.units.length) ? rec.units : [{ label: "", rooms: rec.rooms }];
+  rec.units = list.map(function(u) { return { label: u.label || "", rooms: compactRooms(restoreRooms(u.rooms)) }; });
+  delete rec.rooms;
+  rec.v = 2;
+  rec.title = inspTitle(rec.form || {});
+  return rec;
 }
 function setCurrentId(id) {
   currentInspId = id;
@@ -5025,7 +5068,8 @@ function saveNow() {
     title: inspTitle(form),
     form: form,
     info: info,
-    units: units.map(function(u) { return { label: u.label, rooms: u.rooms }; })
+    units: units.map(function(u) { return { label: u.label, rooms: compactRooms(u.rooms) }; }),
+    v: 2
   };
   if (writeAll(all)) lastSavedAt = now;
   renderSaveBar();
@@ -5056,6 +5100,15 @@ function restoreRooms(saved) {
         if (!ss) return;
         var ts = r.itemStates[iid];
         ts.meetsReq = !!ss.meetsReq;
+        if (ss.sparse) {
+          (ss.conditions || []).forEach(function(sc) {
+            var t = null;
+            if (sc.cid) t = ts.conditions.filter(function(c) { return c.cid === sc.cid; })[0];
+            if (!t && !sc.cid) t = ts.conditions[sc.i];
+            if (t) { t.checked = !!sc.checked; t.comment = sc.comment || ""; }
+          });
+          return;
+        }
         var saved = ss.conditions || [];
         var byCid = {};
         var hasCid = saved.some(function(sc) { return sc && sc.cid; });
@@ -5131,7 +5184,7 @@ function showInspections() {
     info.style.flex = "1";
     var num = "";
     info.innerHTML = "<span></span><div style='font-size:11px;color:#666;font-weight:normal;text-decoration:none;'></div>";
-    info.firstChild.textContent = rec.title + (rec.id === currentInspId ? "  (open now)" : "");
+    info.firstChild.textContent = inspTitle(rec.form || {}) + (rec.id === currentInspId ? "  (open now)" : "");
     info.lastChild.textContent = num + "Saved " + fmtTime(new Date(rec.savedAt));
     info.addEventListener("click", function() { openInspection(rec.id); });
     var del = document.createElement("button");
@@ -5199,6 +5252,7 @@ function importBackup(input) {
       data.inspections.forEach(function(rec) {
         if (!rec || !rec.id || !(rec.rooms || rec.units)) return;
         if (all[rec.id]) replaced++; else added++;
+        try { compactRecord(rec); } catch (e) {}
         all[rec.id] = rec;
       });
       if (!writeAll(all)) throw new Error("Could not save to this browser.");
@@ -5237,6 +5291,17 @@ document.addEventListener("visibilitychange", function() { if (document.visibili
 window.addEventListener("pagehide", saveNow);
 
 // Startup: reopen the last inspection if there is one
+(function shrinkStoredInspections() {
+  var all = loadAll(), changed = false;
+  Object.keys(all).forEach(function(k) {
+    var rec = all[k];
+    if (rec && rec.v !== 2) {
+      try { compactRecord(rec); changed = true; } catch (e) {}
+    }
+  });
+  if (changed) writeAll(all);
+})();
+
 (function initSave() {
   var all = loadAll();
   var cur = null;
