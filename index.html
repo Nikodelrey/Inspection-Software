@@ -523,6 +523,16 @@ input:not([type]), select, textarea, .fld-in, .cond-comment-input, .label-input 
   #screen-report .no-print { display: none !important; }
   #reportBody { padding: 0 !important; zoom: 1 !important; }
 }
+.spellnote{color:#555;font-size:14px;margin:10px 0;line-height:1.4}
+.spellout{display:flex;flex-direction:column;gap:10px;padding-bottom:30px}
+.spbox{background:#fff;border:1px solid #cdd9e6;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.spbox .where{font-size:12px;color:#1a2744;font-weight:bold;cursor:pointer;text-decoration:underline}
+.spbox .sptext{font-size:13px;color:#444;font-style:italic}
+.spword{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.spword .bad{font-weight:600;color:#cc3300;text-decoration:underline wavy #cc3300;text-underline-offset:3px;margin-right:4px}
+.spword button{padding:7px 12px;font-size:15px;border-radius:999px;border:1px solid #ccc;background:#fff;font-family:inherit;cursor:pointer}
+.spword button.fix{border-color:#1a2744;color:#1a2744}
+.spword button.ign{color:#777}
 </style>
 </head>
 <body>
@@ -564,6 +574,7 @@ input:not([type]), select, textarea, .fld-in, .cond-comment-input, .label-input 
       </div>
     </div>
 
+    <button onclick="showSpell()" style="width:100%;margin-top:18px;background:none;border:1px solid #1a2744;border-radius:6px;padding:10px;font-size:14px;font-family:inherit;cursor:pointer;color:#1a2744;">Check spelling first</button>
     <div style="display:flex;gap:10px;margin-top:20px;padding-bottom:30px;">
       <button onclick="showMain()" style="background:none;border:1px solid #ccc;border-radius:6px;padding:12px 20px;font-size:14px;font-family:inherit;cursor:pointer;color:#555;">
         Cancel
@@ -577,6 +588,19 @@ input:not([type]), select, textarea, .fld-in, .cond-comment-input, .label-input 
       <button onclick="runXMLOnly()" style="flex:1;background:none;border:1px solid #1a2744;border-radius:6px;padding:10px;font-size:13px;font-family:inherit;cursor:pointer;color:#1a2744;">XML only</button>
     </div>
     <p style="font-size:11px;color:#777;padding-bottom:30px;margin-top:-20px;">The XML uses the City&#39;s upload format. Upload it on the evaluation page in the City portal (Upload Report). Wall Insulation, Condo Conversion and General Area Comments are not in the XML yet; enter those on the portal.</p>
+  </div>
+</div>
+
+<!-- SCREEN: SPELLING CHECK -->
+<div id="screen-spell" style="display:none;">
+  <div style="background:#1a2744;color:white;padding:12px 16px;font-size:16px;font-weight:bold;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <span>Spelling Check</span>
+    <button onclick="showMain()" style="background:#fff;color:#1a2744;border:none;border-radius:6px;padding:8px 14px;font-size:14px;font-family:inherit;cursor:pointer;">Done</button>
+  </div>
+  <div style="padding:10px 16px;max-width:640px;margin:0 auto;">
+    <p class="spellnote" id="spellMsg"></p>
+    <button id="bSpell" onclick="startSpell()" style="background:#1a2744;color:white;border:none;border-radius:6px;padding:10px 18px;font-size:15px;font-family:inherit;cursor:pointer;">Check spelling</button>
+    <div id="spellOut" class="spellout" style="margin-top:12px;"></div>
   </div>
 </div>
 
@@ -3622,7 +3646,7 @@ function unitStatus(u) {
 // SCREEN NAVIGATION
 // =======================================
 function showScreen(id) {
-  var screens = ["screen-form","screen-owner","screen-dwelling","screen-report","screen-main","screen-inspections","screen-roompicker","screen-category","screen-item"];
+  var screens = ["screen-form","screen-spell","screen-owner","screen-dwelling","screen-report","screen-main","screen-inspections","screen-roompicker","screen-category","screen-item"];
   screens.forEach(function(s) {
     document.getElementById(s).style.display = "none";
   });
@@ -4478,6 +4502,9 @@ function openItem(itemId) {
     var inp = document.createElement("input");
     inp.type = "text";
     inp.className = "cond-comment-input";
+    inp.setAttribute("spellcheck", "true");
+    inp.setAttribute("autocorrect", "on");
+    inp.setAttribute("autocapitalize", "sentences");
     inp.value = st.comment || "";
     if (cond.freeText) inp.placeholder = "Enter detail...";
     inp.addEventListener("input", (function(iid, i, box) {
@@ -5622,7 +5649,10 @@ function renderSaveBar() {
   var b2 = document.createElement("button");
   b2.className = "btn-add"; b2.textContent = "New";
   b2.addEventListener("click", function() { newInspection(true); });
-  right.appendChild(b1); right.appendChild(b2);
+  var b3 = document.createElement("button");
+  b3.className = "btn-add"; b3.textContent = "Spelling";
+  b3.addEventListener("click", showSpell);
+  right.appendChild(b1); right.appendChild(b3); right.appendChild(b2);
   bar.appendChild(left); bar.appendChild(right);
 }
 
@@ -5801,6 +5831,171 @@ window.addEventListener("pagehide", saveNow);
 
 renderMain();
 renderSaveBar();
+
+// =======================================
+// SPELLING CHECK (dictionary downloads once, then works offline)
+// =======================================
+var TYPO_V = "1.2.4", TYPO_BASE = "https://cdn.jsdelivr.net/npm/typo-js@" + TYPO_V + "/";
+var TRADE_WORDS = ("gfci afci splc tish hvac romex soffit soffits fascia downspout downspouts drywall subfloor flue flues damper dampers " +
+  "joist joists handrail handrails guardrail guardrails sump backflow pex csst egress knob tube bx sheathing shingles shingle flashing " +
+  "efflorescence spalling tuckpoint tuckpointing caulk caulking backdraft backdrafting hydronic boiler boilers condensate thermocouple " +
+  "aquastat tpr grout grouting bonding grounding ungrounded wye cleanout cleanouts trap traps lavatory lav whirlpool sillcock sillcocks " +
+  "hosebibb hosebibbs hosebib hosebibs stairway stairways newel balusters baluster riser risers tread treads stringer stringers rafters rafter " +
+  "purlins eave eaves gable dormer dormers kneewall kneewalls mudsill sill sills lintel lintels sq ft cmu abs pvc cpvc pb romex nm " +
+  "vermiculite batt batts blown cellulose fiberglass rockwool sone btu btus cfm amp amps ampacity breaker breakers subpanel subpanels " +
+  "bushing bushings romex jbox jboxes j-box gfi afi ul cpsc nec irc ibc dwv waste vent vented unvented backsplash countertop countertops " +
+  "smoke co detector detectors egress ductwork ducts duct plenum plenums firestop firestopping firebox hearth chimney chimneys liner " +
+  "unlined crickets cricket gutters gutter tuckpointed parging parge rim joist sistered sister sistering shim shims shimmed weatherstrip " +
+  "weatherstripping thermopane handrailing nonconforming tamperproof pre preexisting mpls minneapolis hennepin xcel centerpoint").split(" ");
+var typo = null;
+var SPELL_KEY = "insp.spellWords";
+function spGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function spSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function spEsc(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function myWords() {
+  try { return new Set(JSON.parse(spGet(SPELL_KEY) || "[]")); } catch (e) { return new Set(); }
+}
+var spellMem = {};   // in-memory fallback if storage is full
+function loadTypo() {
+  if (typo) return Promise.resolve(typo);
+  function get(f) {
+    var key = "insp.typo." + TYPO_V + "." + f;
+    var txt = spellMem[key] || spGet(key);
+    if (txt) return Promise.resolve(txt);
+    return fetch(TYPO_BASE + f).then(function(res) {
+      if (!res.ok) throw new Error("download");
+      return res.text();
+    }).then(function(t) { spellMem[key] = t; spSet(key, t); return t; });
+  }
+  return Promise.all([get("typo.js"), get("dictionaries/en_US/en_US.aff"), get("dictionaries/en_US/en_US.dic")]).then(function(r) {
+    if (!window.Typo) { var s = document.createElement("script"); s.textContent = r[0]; document.head.appendChild(s); }
+    return new Promise(function(ok) { setTimeout(ok, 30); }).then(function() {
+      typo = new window.Typo("en_US", r[1], r[2]);
+      return typo;
+    });
+  });
+}
+// Every comment box with text in it, across all units, rooms and items
+function spellItems() {
+  var out = [];
+  units.forEach(function(u, ui) {
+    categories.forEach(function(cat) {
+      var list = u.rooms[cat.id] || [];
+      list.forEach(function(room, ri) {
+        Object.keys(room.itemStates || {}).forEach(function(itemId) {
+          var st = room.itemStates[itemId];
+          var item = itemId === AREA_ID ? null : getItem(cat, itemId);
+          (st.conditions || []).forEach(function(c, ci) {
+            if (!c.comment || !String(c.comment).trim()) return;
+            var where = (units.length > 1 ? unitName(ui) + " \u00b7 " : "") + cat.name +
+              (list.length > 1 ? " (Room " + (ri + 1) + (room.label ? ": " + room.label : "") + ")" : "");
+            var what;
+            if (itemId === AREA_ID) what = (cat.areaConditions && cat.areaConditions[ci] ? cat.areaConditions[ci].text : "Area comment");
+            else what = (item ? item.name : itemId) + (item && item.conditions[ci] ? " \u00b7 " + item.conditions[ci].code : "");
+            out.push({ ref: [ui, cat.id, ri, itemId, ci].join("|"), where: where, label: what, st: c });
+          });
+        });
+      });
+    });
+  });
+  return out;
+}
+function badWords(txt, mine) {
+  var seen = {}, bad = [];
+  (String(txt).match(/[A-Za-z][A-Za-z']*[A-Za-z]|[A-Za-z]/g) || []).forEach(function(w) {
+    var base = w.replace(/'s$/i, "");
+    if (base.length < 3 || seen[w]) return;
+    seen[w] = 1;
+    if (/^[A-Z]+s?$/.test(base)) return;            // abbreviations like GFCI, CO
+    var lw = base.toLowerCase();
+    if (TRADE_WORDS.indexOf(lw) >= 0 || mine.has(lw)) return;
+    if (typo.check(base) || typo.check(lw) || typo.check(lw.charAt(0).toUpperCase() + lw.slice(1))) return;
+    bad.push(w);
+  });
+  return bad;
+}
+function runSpell() {
+  var mine = myWords(), html = "", n = 0;
+  spellItems().forEach(function(b) {
+    var bad = badWords(b.st.comment, mine);
+    if (!bad.length) return;
+    n += bad.length;
+    html += "<div class='spbox'><div class='where' data-go='" + spEsc(b.ref) + "'>" +
+      spEsc(b.where) + " - " + spEsc(b.label) + " &rsaquo;</div>" +
+      "<div class='sptext'>" + spEsc(b.st.comment) + "</div>";
+    bad.forEach(function(w) {
+      var sug = [];
+      try { sug = typo.suggest(w, 3); } catch (e) {}
+      html += "<div class='spword'><span class='bad'>" + spEsc(w) + "</span>";
+      sug.forEach(function(s) {
+        html += "<button class='fix' data-fix='" + spEsc(b.ref) + "' data-w='" + spEsc(w) + "' data-s='" + spEsc(s) + "'>" + spEsc(s) + "</button>";
+      });
+      if (!sug.length) html += "<span class='spellnote' style='margin:0'>No suggestions</span>";
+      html += "<button class='ign' data-ign='" + spEsc(w) + "'>Ignore</button></div>";
+    });
+    html += "</div>";
+  });
+  document.getElementById("spellOut").innerHTML = html;
+  document.getElementById("spellMsg").textContent = n
+    ? n + " word" + (n > 1 ? "s" : "") + " to look at. Tap a suggestion to fix it, or Ignore to keep the word and remember it."
+    : "No spelling problems found in your comments.";
+}
+function startSpell() {
+  var b = document.getElementById("bSpell");
+  b.disabled = true; b.textContent = "Checking\u2026";
+  loadTypo().then(function() { runSpell(); }).catch(function() {
+    document.getElementById("spellMsg").textContent =
+      "Couldn\u0027t load the dictionary. Connect to the internet and try again; after one successful check it works offline.";
+  }).then(function() { b.disabled = false; b.textContent = "Check spelling"; });
+}
+function spellRef(ref) {
+  var p = ref.split("|");
+  var u = units[+p[0]]; if (!u) return null;
+  var room = (u.rooms[p[1]] || [])[+p[2]]; if (!room) return null;
+  var st = room.itemStates[p[3]]; if (!st) return null;
+  return { ui: +p[0], catId: p[1], ri: +p[2], itemId: p[3], c: st.conditions[+p[4]] };
+}
+function initSpell() {
+  var out = document.getElementById("spellOut");
+  if (!out) return;
+  out.addEventListener("click", function(e) {
+    var b = e.target.closest("button, .where");
+    if (!b) return;
+    if (b.dataset.go) {
+      var r = spellRef(b.dataset.go);
+      if (!r) return;
+      setUnit(r.ui); cameFromPicker = false;
+      openCategory(r.catId, r.ri); openItem(r.itemId);
+      return;
+    }
+    if (b.dataset.fix) {
+      var t = spellRef(b.dataset.fix);
+      if (!t || !t.c) return;
+      var w = b.dataset.w, s = b.dataset.s;
+      var re = new RegExp("(^|[^A-Za-z'])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![A-Za-z'])", "g");
+      t.c.comment = String(t.c.comment).replace(re, function(m, p) { return p + s; });
+      if (typeof scheduleSave === "function") scheduleSave();
+      runSpell();
+      return;
+    }
+    if (b.dataset.ign) {
+      var m = myWords();
+      m.add(b.dataset.ign.replace(/'s$/i, "").toLowerCase());
+      spSet(SPELL_KEY, JSON.stringify(Array.from(m)));
+      runSpell();
+    }
+  });
+}
+function showSpell() {
+  document.getElementById("spellOut").innerHTML = "";
+  document.getElementById("spellMsg").textContent =
+    "Checks every comment you\u0027ve typed, in every unit and room. The first check needs an internet connection; after that it also works offline.";
+  showScreen("screen-spell");
+  startSpell();
+}
+initSpell();
 </script>
 </body>
 </html>
