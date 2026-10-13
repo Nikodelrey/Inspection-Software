@@ -5232,6 +5232,19 @@ function xmlAnalyticValue(key, v) {
   };
   // City accepts only 8 | 9 | 0 for water heater age
   if (key === "wh-age") return ({ "Less than 8 years old": "8", "8 years or older": "9", "N/A": "0" })[v] || "";
+  // City accepts only 14 | 15 | 0 for air conditioner age (confirmed by upload)
+  if (key === "ac-age") return ({ "Less than 15 years old": "14", "15 years or older": "15", "Undetermined": "0" })[v] || "";
+  // City requires a decimal number for attic insulation depth (5 -> 5.0)
+  if (key === "attic-depth") {
+    var num = parseFloat(String(v).replace(/[^0-9.]/g, ""));
+    if (isNaN(num)) return v;
+    var d = String(num);
+    return d.indexOf(".") >= 0 ? d : d + ".0";
+  }
+  if (key === "attic-sqft") {
+    var sq = String(v).replace(/[^0-9.]/g, "");
+    return sq || v;
+  }
   if (ages.hasOwnProperty(v)) return ages[v];
   if (v === "N/A (no outlet)") return "0";
   if (v === "N/A") return "na";   // City requires the venting/age field even when it doesn't apply
@@ -6016,7 +6029,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 13, 2026 (e)";
+var APP_VERSION = "Oct 13, 2026 (f)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
