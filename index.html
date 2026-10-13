@@ -5230,6 +5230,8 @@ function xmlAnalyticValue(key, v) {
     "Less than 15 years old": "14", "15 years or older": "15",
     "Undetermined": "undetermined"
   };
+  // City accepts only 8 | 9 | 0 for water heater age
+  if (key === "wh-age") return ({ "Less than 8 years old": "8", "8 years or older": "9", "N/A": "0" })[v] || "";
   if (ages.hasOwnProperty(v)) return ages[v];
   if (v === "N/A (no outlet)") return "0";
   if (v === "N/A") return "na";   // City requires the venting/age field even when it doesn't apply
@@ -6014,7 +6016,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 13, 2026 (d)";
+var APP_VERSION = "Oct 13, 2026 (e)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
