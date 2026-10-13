@@ -5225,7 +5225,7 @@ function xmlAnalyticValue(key, v) {
   };
   if (ages.hasOwnProperty(v)) return ages[v];
   if (v === "N/A (no outlet)") return "0";
-  if (v === "N/A") return "";
+  if (v === "N/A") return "n/a";   // City requires the venting/age field even when it doesn't apply
   if (key === "attic-access") return v === "Yes" ? "true" : (v === "No" ? "false" : v.toLowerCase());
   if (/^(amp|volts|attic-sqft|attic-depth|ext-singlepane|dryer-volt|cook-volt)$/.test(key)) return v;
   return v.toLowerCase();
@@ -5239,6 +5239,7 @@ function xmlText(s) {
 function buildXML() {
   var x = [];
   var skipped = [];
+  var missing = [];
   x.push('<?xml version="1.0" encoding="utf-8" ?>');
   x.push("<tish_evaluation xmlns='urn:evaluation-schema'>");
   x.push('<evaluation_units>');
@@ -5263,6 +5264,7 @@ function buildXML() {
           if (!name) return;
           var val = xmlAnalyticValue(fd.key, room.extraData[fd.key]);
           if (val !== "") an.push('<area_analytic analytic_name="' + name + '">' + xmlText(val) + '</area_analytic>');
+          else if (!room.na) missing.push((units.length > 1 ? unitName(ui) + " - " : "") + cat.name + (room.label ? " (" + room.label + ")" : "") + ": " + fd.label);
         });
         if (an.length) { x.push('<area_analytics>'); an.forEach(function(l) { x.push(l); }); x.push('</area_analytics>'); }
 
@@ -5300,6 +5302,7 @@ function buildXML() {
   x.push('</evaluation_units>');
   x.push('</tish_evaluation>');
   buildXML.skipped = skipped;
+  buildXML.missing = missing;
   return x.join("\n");
 }
 
@@ -5320,6 +5323,14 @@ function downloadXML() {
   a.click();
   document.body.removeChild(a);
   setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
+  var miss = buildXML.missing || [];
+  if (miss.length) {
+    setTimeout(function() {
+      alert("The XML was saved, but the City upload will reject it until these are filled in:\n\n- " +
+        miss.slice(0, 12).join("\n- ") + (miss.length > 12 ? "\n(and " + (miss.length - 12) + " more)" : "") +
+        "\n\nFill them in, then save the XML again.");
+    }, 300);
+  }
 }
 
 function runXMLOnly() {
