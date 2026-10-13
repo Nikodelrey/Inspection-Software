@@ -4292,6 +4292,23 @@ function renderExtraFields(cat, room) {
     container.appendChild(wrap);
   });
 
+  // Like the City software: attic not accessible -> no insulation depth/type
+  var atA = document.getElementById("extra-attic-access");
+  if (atA) {
+    var atSync = function() {
+      var off = atA.value === "No";
+      ["attic-depth", "attic-instype", "attic-multi"].forEach(function(k) {
+        var el = document.getElementById("extra-" + k);
+        if (!el) return;
+        if (off) el.value = "";
+        el.disabled = off;
+        el.style.opacity = off ? "0.45" : "";
+      });
+    };
+    atA.addEventListener("change", atSync);
+    atSync();
+  }
+
   // Like the City software: no air conditioner -> age is Undetermined
   var acT = document.getElementById("extra-ac-type"), acA = document.getElementById("extra-ac-age");
   if (acT && acA) acT.addEventListener("change", function() { if (acT.value === "None") acA.value = "Undetermined"; });
@@ -5284,6 +5301,7 @@ function buildXML() {
         (cat.extraFields || []).forEach(function(fd) {
           var name = XML_ANALYTICS[fd.key];
           if (!name) return;
+          if (/^attic-(depth|instype)$/.test(fd.key) && room.extraData["attic-access"] === "No") return;
           var val = xmlAnalyticValue(fd.key, room.extraData[fd.key]);
           if (val !== "") an.push('<area_analytic analytic_name="' + name + '">' + xmlText(val) + '</area_analytic>');
           else if (!room.na) missing.push((units.length > 1 ? unitName(ui) + " - " : "") + cat.name + (room.label ? " (" + room.label + ")" : "") + ": " + fd.label);
@@ -6029,7 +6047,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 13, 2026 (f)";
+var APP_VERSION = "Oct 13, 2026 (g)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
