@@ -4292,6 +4292,10 @@ function renderExtraFields(cat, room) {
     container.appendChild(wrap);
   });
 
+  // Like the City software: no air conditioner -> age is Undetermined
+  var acT = document.getElementById("extra-ac-type"), acA = document.getElementById("extra-ac-age");
+  if (acT && acA) acT.addEventListener("change", function() { if (acT.value === "None") acA.value = "Undetermined"; });
+
   // Show/hide conditional fields when their controlling dropdown changes
   cat.extraFields.forEach(function(field) {
     if (!field.showIf) return;
@@ -4426,6 +4430,8 @@ function saveExtraFields() {
     var el = document.getElementById("extra-" + field.key);
     if (el) rooms[currentCatId][currentRoomIdx].extraData[field.key] = el.value;
   });
+  var ed = rooms[currentCatId][currentRoomIdx].extraData;
+  if (ed["ac-type"] === "None" && !ed["ac-age"]) ed["ac-age"] = "Undetermined";
   cat.extraFields.forEach(function(field) {
     if (!field.showIf) return;
     var data = rooms[currentCatId][currentRoomIdx].extraData;
@@ -5222,11 +5228,11 @@ function xmlAnalyticValue(key, v) {
     "Less than 8 years old": "7", "8 years or older": "8",
     "Less than 20 years old": "19", "20 years or older": "20",
     "Less than 15 years old": "14", "15 years or older": "15",
-    "Undetermined": ""
+    "Undetermined": "undetermined"
   };
   if (ages.hasOwnProperty(v)) return ages[v];
   if (v === "N/A (no outlet)") return "0";
-  if (v === "N/A") return "n/a";   // City requires the venting/age field even when it doesn't apply
+  if (v === "N/A") return "na";   // City requires the venting/age field even when it doesn't apply
   if (key === "attic-access") return v === "Yes" ? "true" : (v === "No" ? "false" : v.toLowerCase());
   if (/^(amp|volts|attic-sqft|attic-depth|ext-singlepane|dryer-volt|cook-volt)$/.test(key)) return v;
   return v.toLowerCase();
@@ -6008,7 +6014,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 13, 2026 (b)";
+var APP_VERSION = "Oct 13, 2026 (d)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
