@@ -5960,7 +5960,12 @@ function spellItems() {
 }
 function badWords(txt, mine) {
   var seen = {}, bad = [];
-  (String(txt).match(/[A-Za-z][A-Za-z']*[A-Za-z]|[A-Za-z]/g) || []).forEach(function(w) {
+  (String(txt).match(/[A-Za-z0-9][A-Za-z0-9']*[A-Za-z0-9]|[A-Za-z]/g) || []).forEach(function(w) {
+    if (/[0-9]/.test(w)) {
+      // a digit typed in the middle of a word, like "miss8ng" (2nd, 120v, 2x4 are fine)
+      if (/[A-Za-z][0-9]+[A-Za-z]/.test(w) && !/^[0-9]*x[0-9]+$/i.test(w) && !seen[w]) { seen[w] = 1; bad.push(w); }
+      return;
+    }
     var base = w.replace(/'s$/i, "");
     if (base.length < 3 || seen[w]) return;
     seen[w] = 1;
@@ -5971,6 +5976,21 @@ function badWords(txt, mine) {
     bad.push(w);
   });
   return bad;
+}
+// Number keys sit right above these letters on the keyboard
+var DIGIT_KEYS = { "1": "q", "2": "w", "3": "e", "4": "r", "5": "t", "6": "y", "7": "u", "8": "i", "9": "o", "0": "p" };
+function spellSuggest(w) {
+  if (!/[0-9]/.test(w)) return typo.suggest(w, 3);
+  var out = [];
+  function add(c) { if (c && out.indexOf(c) < 0 && (typo.check(c) || typo.check(c.toLowerCase()))) out.push(c); }
+  add(w.replace(/[0-9]/g, function(d) { return DIGIT_KEYS[d]; }));   // miss8ng -> missing
+  add(w.replace(/[0-9]/g, "o"));                                     // 0 for o
+  add(w.replace(/[0-9]/g, ""));                                      // extra key pressed
+  if (out.length < 3) {
+    var t = w.replace(/[0-9]/g, function(d) { return DIGIT_KEYS[d]; });
+    try { typo.suggest(t, 3).forEach(function(c) { if (out.length < 3 && out.indexOf(c) < 0) out.push(c); }); } catch (e) {}
+  }
+  return out.slice(0, 3);
 }
 function runSpell() {
   var mine = myWords(), html = "", n = 0;
@@ -5983,7 +6003,7 @@ function runSpell() {
       "<div class='sptext'>" + spEsc(b.st.comment) + "</div>";
     bad.forEach(function(w) {
       var sug = [];
-      try { sug = typo.suggest(w, 3); } catch (e) {}
+      try { sug = spellSuggest(w); } catch (e) {}
       html += "<div class='spword'><span class='bad'>" + spEsc(w) + "</span>";
       sug.forEach(function(s) {
         html += "<button class='fix' data-fix='" + spEsc(b.ref) + "' data-w='" + spEsc(w) + "' data-s='" + spEsc(s) + "'>" + spEsc(s) + "</button>";
@@ -6030,7 +6050,7 @@ function initSpell() {
       var t = spellRef(b.dataset.fix);
       if (!t || !t.c) return;
       var w = b.dataset.w, s = b.dataset.s;
-      var re = new RegExp("(^|[^A-Za-z'])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![A-Za-z'])", "g");
+      var re = new RegExp("(^|[^A-Za-z0-9'])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(?![A-Za-z0-9'])", "g");
       t.c.comment = String(t.c.comment).replace(re, function(m, p) { return p + s; });
       if (typeof scheduleSave === "function") scheduleSave();
       runSpell();
@@ -6052,7 +6072,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 14, 2026 (h)";
+var APP_VERSION = "Oct 14, 2026 (i)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
