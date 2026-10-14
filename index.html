@@ -5262,6 +5262,11 @@ function xmlAnalyticValue(key, v) {
     var sq = String(v).replace(/[^0-9.]/g, "");
     return sq || v;
   }
+  // City codes for insulation type (from the City's upload error message)
+  if (key === "attic-instype" || key === "wall-instype") {
+    var ins = { "Fiberglass": "ob fg", "Cellulose": "dp cellulose", "Mineral Wool": "mineral wool batt", "Rigid Foam": "extr polysty" };
+    return ins[v] || v.toLowerCase();
+  }
   if (ages.hasOwnProperty(v)) return ages[v];
   if (v === "N/A (no outlet)") return "0";
   if (v === "N/A") return "na";   // City requires the venting/age field even when it doesn't apply
@@ -6047,7 +6052,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 13, 2026 (g)";
+var APP_VERSION = "Oct 14, 2026 (h)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
