@@ -587,7 +587,7 @@ input:not([type]), select, textarea, .fld-in, .cond-comment-input, .label-input 
       <button onclick="startGeneratePDF()" style="flex:1;background:none;border:1px solid #1a2744;border-radius:6px;padding:10px;font-size:13px;font-family:inherit;cursor:pointer;color:#1a2744;">PDF only</button>
       <button onclick="runXMLOnly()" style="flex:1;background:none;border:1px solid #1a2744;border-radius:6px;padding:10px;font-size:13px;font-family:inherit;cursor:pointer;color:#1a2744;">XML only</button>
     </div>
-    <p style="font-size:11px;color:#777;padding-bottom:30px;margin-top:-20px;">The XML uses the City&#39;s upload format. Upload it on the evaluation page in the City portal (Upload Report). Wall Insulation, Condo Conversion and General Area Comments are not in the XML yet; enter those on the portal.</p>
+    <p style="font-size:11px;color:#777;padding-bottom:30px;margin-top:-20px;">The XML uses the City&#39;s upload format. Upload it on the evaluation page in the City portal (Upload Report). Wall Insulation and General Area Comments are not in the XML yet; enter those on the portal.</p>
   </div>
 </div>
 
@@ -707,12 +707,16 @@ input:not([type]), select, textarea, .fld-in, .cond-comment-input, .label-input 
 <!-- SCREEN: SAVED INSPECTIONS -->
 <div id="screen-inspections" style="display:none;">
   <div style="background:#1a2744;color:white;padding:12px 14px;font-size:16px;font-weight:bold;">Saved Inspections</div>
-  <p style="padding:12px 14px 4px;font-size:13px;color:#555;">Inspections save automatically on this iPad. Tap one to open it.</p>
-  <div id="inspList" style="padding:0 14px;"></div>
-  <div style="display:flex;gap:10px;padding:14px;">
+  <div style="display:flex;gap:10px;padding:12px 14px 6px;">
     <button class="btn-cancel" onclick="showMain()">Back</button>
     <button class="btn-add" style="flex:1;padding:10px;" onclick="newInspection(true)">+ New Inspection</button>
   </div>
+  <div style="padding:4px 14px 2px;">
+    <input id="inspSearch" type="search" placeholder="Search by address or owner" autocomplete="off" autocorrect="off" spellcheck="false"
+      oninput="filterInspections()" style="width:100%;border:1px solid #bbb;border-radius:6px;padding:10px 12px;font-size:16px;font-family:inherit;">
+  </div>
+  <p id="inspInfo" style="padding:6px 14px 4px;font-size:12px;color:#666;">Inspections save automatically on this device. Newest first. Tap one to open it.</p>
+  <div id="inspList" style="padding:0 14px;"></div>
   <div style="margin:6px 14px 30px;padding:12px;border:1px solid #ddd;border-radius:6px;background:#fafafa;">
     <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">Backup</div>
     <p style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.4;">Saved inspections live in Safari on this device. Export a backup file now and then (save it to Files or iCloud Drive) so nothing is lost if Safari data is cleared.</p>
@@ -1373,9 +1377,9 @@ const categories = [
     areaType: 'Heating',
     itemStartIndex: 22,
     extraFields: [
-      { key:'hs-type', label:'System type', type:'select', options:['- Select a type -','Forced Air Furnace','Pumped Boiler','Gravity Furnace','Gravity Boiler','Electric Other','Steam Boiler','Ground Source Heat Pump','Air Source Heat Pump','Other','None'] },
-      { key:'hs-vent', label:'System venting type', type:'select', options:['- Select a venting type -','Natural Draft','Induced Draft','Condensing (PVC Pipe)','N/A'] },
-      { key:'hs-age', label:'System age', type:'select', options:['- Select age -','20 years or older','Less than 20 years old'] },
+      { key:'hs-type', label:'Heating system type', type:'select', options:['- Select a type -','Forced Air Furnace','Pumped Boiler','Gravity Furnace','Gravity Boiler','Electric Other','Steam Boiler','Ground Source Heat Pump','Air Source Heat Pump','Other','None'] },
+      { key:'hs-vent', label:'Heating system venting type', type:'select', options:['- Select a venting type -','Natural Draft','Induced Draft','Condensing (PVC Pipe)','N/A'] },
+      { key:'hs-age', label:'Heating system age', type:'select', options:['- Select age -','20 years or older','Less than 20 years old'] },
       { key:'ac-type', label:'Air conditioner type', type:'select', options:['- Select a type -','Central','Ducted air source heat pump','Mini split','None'] },
       { key:'ac-age', label:'Air conditioner age', type:'select', options:['- Select age -','Less than 15 years old','15 years or older','Undetermined'] },
     ],
@@ -3461,21 +3465,6 @@ const categories = [
     ],
     items: []
   },
-  {
-    id: 'condo',
-    name: 'Condo Conversion',
-    areaType: 'Condo',
-    itemStartIndex: 102,
-    items: [
-      {
-        id: 'condo-102', name: 'Condo Conversion Professional Opinion', itemType:'CondoPO', mid:12285,
-        conditions: [
-          { code:'NA', text:'Not Applicable/Does Not Apply', cid:16332 },
-          { code:'LIC', text:'Professional Opinion of common areas not present. NOTE: Buyer cannot assume this required repair.', cid:14698 },
-        ]
-      },
-    ]
-  },
 ];
 
 // =======================================
@@ -5457,19 +5446,27 @@ function compactRooms(rs) {
   var out = {};
   categories.forEach(function(cat) {
     out[cat.id] = (rs[cat.id] || []).map(function(r) {
-      var o = { label: r.label || "", na: !!r.na };
+      var o = {};
+      if (r.label) o.label = r.label;
+      if (r.na) o.na = true;
       var ex = {};
       Object.keys(r.extraData || {}).forEach(function(k) { if (r.extraData[k]) ex[k] = r.extraData[k]; });
       if (Object.keys(ex).length) o.extraData = ex;
       var its = {};
       Object.keys(r.itemStates || {}).forEach(function(iid) {
+        // Short format: 1 = meets only; otherwise {m:1?, c:[[cid or -(index+1), comment?, 0 if unchecked]]}
         var s = r.itemStates[iid], cs = [];
         s.conditions.forEach(function(cd, i) {
-          if (cd.checked || cd.comment) cs.push({ i: i, cid: cd.cid || null, checked: !!cd.checked, comment: cd.comment || "" });
+          if (!cd.checked && !cd.comment) return;
+          var e = [cd.cid || -(i + 1)];
+          if (cd.comment || !cd.checked) e.push(cd.comment || "");
+          if (!cd.checked) e.push(0);
+          cs.push(e);
         });
-        if (s.meetsReq || cs.length) its[iid] = { sparse: 1, meetsReq: !!s.meetsReq, conditions: cs };
+        if (!cs.length && s.meetsReq) its[iid] = 1;
+        else if (cs.length) { its[iid] = { c: cs }; if (s.meetsReq) its[iid].m = 1; }
       });
-      o.itemStates = its;
+      if (Object.keys(its).length) o.s = its;
       return o;
     });
   });
@@ -5481,7 +5478,7 @@ function compactRecord(rec) {
   var list = (rec.units && rec.units.length) ? rec.units : [{ label: "", rooms: rec.rooms }];
   rec.units = list.map(function(u) { return { label: u.label || "", rooms: compactRooms(restoreRooms(u.rooms)) }; });
   delete rec.rooms;
-  rec.v = 2;
+  rec.v = 3;
   rec.title = inspTitle(rec.form || {});
   return rec;
 }
@@ -5612,7 +5609,7 @@ function saveNow() {
     form: form,
     info: info,
     units: units.map(function(u) { return { label: u.label, rooms: compactRooms(u.rooms) }; }),
-    v: 2
+    v: 3
   };
   if (writeAll(all)) lastSavedAt = now;
   renderSaveBar();
@@ -5638,10 +5635,20 @@ function restoreRooms(saved) {
       Object.keys(r.extraData).forEach(function(k) {
         if (sr.extraData && sr.extraData[k] != null) r.extraData[k] = sr.extraData[k];
       });
+      var savedStates = sr.s || sr.itemStates;
       Object.keys(r.itemStates).forEach(function(iid) {
-        var ss = sr.itemStates && sr.itemStates[iid];
+        var ss = savedStates && savedStates[iid];
         if (!ss) return;
         var ts = r.itemStates[iid];
+        if (sr.s) {   // short format (v3)
+          if (ss === 1) { ts.meetsReq = true; return; }
+          ts.meetsReq = !!ss.m;
+          (ss.c || []).forEach(function(e) {
+            var t = e[0] > 0 ? ts.conditions.filter(function(c) { return c.cid === e[0]; })[0] : ts.conditions[-e[0] - 1];
+            if (t) { t.checked = e[2] !== 0; t.comment = e[1] || ""; }
+          });
+          return;
+        }
         ts.meetsReq = !!ss.meetsReq;
         if (ss.sparse) {
           (ss.conditions || []).forEach(function(sc) {
@@ -5716,7 +5723,7 @@ function showInspections() {
   saveNow();
   var all = loadAll();
   var list = Object.keys(all).map(function(k) { return all[k]; })
-    .sort(function(a, b) { return (b.savedAt || "").localeCompare(a.savedAt || ""); });
+    .sort(function(a, b) { return (b.createdAt || b.savedAt || "").localeCompare(a.createdAt || a.savedAt || ""); });
   var box = document.getElementById("inspList");
   box.innerHTML = "";
   if (!list.length) {
@@ -5731,7 +5738,9 @@ function showInspections() {
     var num = "";
     info.innerHTML = "<span></span><div style='font-size:11px;color:#666;font-weight:normal;text-decoration:none;'></div>";
     info.firstChild.textContent = inspTitle(rec.form || {}) + (rec.id === currentInspId ? "  (open now)" : "");
-    info.lastChild.textContent = num + "Saved " + fmtTime(new Date(rec.savedAt));
+    info.lastChild.textContent = num + (rec.createdAt ? "Started " + new Date(rec.createdAt).toLocaleDateString() + " \u00b7 " : "") + "Saved " + fmtTime(new Date(rec.savedAt));
+    var who = ((rec.info && rec.info.persons) || []).map(function(p) { return [p.first, p.last, p.biz].join(" "); }).join(" ");
+    row.setAttribute("data-search", (inspTitle(rec.form || {}) + " " + who).toLowerCase());
     info.addEventListener("click", function() { openInspection(rec.id); });
     var del = document.createElement("button");
     del.textContent = "Delete";
@@ -5740,7 +5749,21 @@ function showInspections() {
     row.appendChild(info); row.appendChild(del);
     box.appendChild(row);
   });
+  var used = 0;
+  try { Object.keys(localStorage).forEach(function(k) { used += (localStorage.getItem(k) || "").length; }); } catch (e) {}
+  document.getElementById("inspInfo").textContent = list.length + " inspection" + (list.length === 1 ? "" : "s") +
+    " saved on this device, newest first. Storage used: about " + (used / 1048576 * 2).toFixed(1) + " MB of 5 MB.";
+  document.getElementById("inspSearch").value = "";
   showScreen("screen-inspections");
+}
+
+function filterInspections() {
+  var q = document.getElementById("inspSearch").value.toLowerCase().trim();
+  var words = q.split(/\s+/).filter(Boolean);
+  document.querySelectorAll("#inspList > div[data-search]").forEach(function(row) {
+    var t = row.getAttribute("data-search");
+    row.style.display = words.every(function(w) { return t.indexOf(w) >= 0; }) ? "" : "none";
+  });
 }
 
 function openInspection(id, skipSave) {
@@ -5864,7 +5887,7 @@ window.addEventListener("pagehide", saveNow);
   var all = loadAll(), changed = false;
   Object.keys(all).forEach(function(k) {
     var rec = all[k];
-    if (rec && rec.v !== 2) {
+    if (rec && rec.v !== 3) {
       try { compactRecord(rec); changed = true; } catch (e) {}
     }
   });
@@ -6072,7 +6095,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 14, 2026 (i)";
+var APP_VERSION = "Oct 15, 2026 (l)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
