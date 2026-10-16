@@ -5288,7 +5288,10 @@ function buildXML() {
   x.push("<tish_evaluation xmlns='urn:evaluation-schema'>");
   x.push('<evaluation_units>');
   units.forEach(function(u, ui) {
-    x.push('<evaluation_unit name="' + xmlEsc(units.length > 1 ? unitName(ui) : "") + '">');
+    // City matches duplex units by label in lower case with no spaces (confirmed by upload: "lower" / "upper")
+    if (units.length > 1 && !String(u.label || "").trim()) missing.push(unitName(ui) + ": no unit label (use the same label as on the City portal, e.g. Lower / Upper)");
+    var uname = units.length > 1 ? String(u.label || unitName(ui)).toLowerCase().replace(/\s+/g, "") : "";
+    x.push('<evaluation_unit name="' + xmlEsc(uname) + '">');
     x.push('<evaluation_areas>');
     categories.forEach(function(cat) {
       u.rooms[cat.id].forEach(function(room) {
@@ -6222,7 +6225,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 16, 2026 (n)";
+var APP_VERSION = "Oct 16, 2026 (o)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
