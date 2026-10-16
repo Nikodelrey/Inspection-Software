@@ -717,6 +717,17 @@ input:not([type]), select, textarea, .fld-in, .cond-comment-input, .label-input 
   </div>
   <p id="inspInfo" style="padding:6px 14px 4px;font-size:12px;color:#666;">Inspections save automatically on this device. Newest first. Tap one to open it.</p>
   <div id="inspList" style="padding:0 14px;"></div>
+  <div id="importPicker" style="display:none;padding:0 14px;">
+    <div style="font-size:15px;font-weight:bold;color:#1a2744;margin:10px 0 4px;">Choose inspections to import</div>
+    <p id="pickInfo" style="font-size:12px;color:#666;margin:0 0 8px;"></p>
+    <input id="pickSearch" type="search" placeholder="Search by address or owner" autocomplete="off" autocorrect="off" spellcheck="false"
+      oninput="filterPicker()" style="width:100%;border:1px solid #bbb;border-radius:6px;padding:10px 12px;font-size:16px;font-family:inherit;margin-bottom:6px;">
+    <div id="pickList"></div>
+    <div style="display:flex;gap:10px;padding:12px 0 24px;">
+      <button class="btn-cancel" onclick="closePicker()">Cancel</button>
+      <button class="btn-add" style="flex:1;padding:10px;" onclick="importPicked()">Import selected</button>
+    </div>
+  </div>
   <div style="margin:6px 14px 30px;padding:12px;border:1px solid #ddd;border-radius:6px;background:#fafafa;">
     <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">Backup</div>
     <p style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.4;">Saved inspections live in Safari on this device. Export a backup file now and then (save it to Files or iCloud Drive) so nothing is lost if Safari data is cleared.</p>
@@ -5429,8 +5440,14 @@ function loadAll() {
 }
 var storageWarned = false;
 function writeAll(all) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(all)); storageOK = true; return true; }
+  var txt = JSON.stringify(all);
+  try { localStorage.setItem(STORE_KEY, txt); storageOK = true; return true; }
   catch (e) {
+    // Full: drop the spell-check dictionary copy first (it re-downloads when needed) and try again
+    try {
+      Object.keys(localStorage).forEach(function(k) { if (k.indexOf("insp.typo.") === 0) localStorage.removeItem(k); });
+      localStorage.setItem(STORE_KEY, txt); storageOK = true; return true;
+    } catch (e2) {}
     storageOK = false;
     if (!storageWarned) {
       storageWarned = true;
@@ -5697,7 +5714,7 @@ function renderSaveBar() {
   if (!bar) return;
   var title = inspTitle(readForm());
   var status;
-  if (!storageOK) status = "<span style='color:#cc3300;'>Saving unavailable in this browser</span>";
+  if (!storageOK) status = "<span style='color:#cc3300;font-weight:bold;'>NOT SAVED \u2014 storage full. Export a backup, then delete old inspections.</span>";
   else if (lastSavedAt) status = "Saved " + fmtTime(lastSavedAt);
   else status = "Not saved yet (saves when you start)";
   bar.innerHTML = "";
@@ -5726,6 +5743,8 @@ function showInspections() {
     .sort(function(a, b) { return (b.createdAt || b.savedAt || "").localeCompare(a.createdAt || a.savedAt || ""); });
   var box = document.getElementById("inspList");
   box.innerHTML = "";
+  box.style.display = "";
+  document.getElementById("importPicker").style.display = "none";
   if (!list.length) {
     box.innerHTML = "<p style='font-size:13px;color:#777;padding:10px 0;'>No saved inspections yet.</p>";
   }
@@ -5746,15 +5765,117 @@ function showInspections() {
     del.textContent = "Delete";
     del.style.cssText = "background:none;border:1px solid #cc3300;color:#cc3300;border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;";
     del.addEventListener("click", function() { deleteInspection(rec.id, rec.title); });
-    row.appendChild(info); row.appendChild(del);
+    var btns = document.createElement("div");
+    btns.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;";
+    var mk = function(label, color, fn) {
+      var x = document.createElement("button");
+      x.textContent = label;
+      x.style.cssText = "background:none;border:1px solid " + color + ";color:" + color + ";border-radius:4px;padding:5px 10px;font-size:12px;cursor:pointer;";
+      x.addEventListener("click", fn);
+      return x;
+    };
+    btns.appendChild(mk("Reinspect", "#1a2744", function() { reinspect(rec.id); }));
+    btns.appendChild(mk("Export", "#1a2744", function() { exportOne(rec.id); }));
+    btns.appendChild(del);
+    row.appendChild(info); row.appendChild(btns);
     box.appendChild(row);
   });
   var used = 0;
   try { Object.keys(localStorage).forEach(function(k) { used += (localStorage.getItem(k) || "").length; }); } catch (e) {}
-  document.getElementById("inspInfo").textContent = list.length + " inspection" + (list.length === 1 ? "" : "s") +
-    " saved on this device, newest first. Storage used: about " + (used / 1048576 * 2).toFixed(1) + " MB of 5 MB.";
+  var mb = used / 1048576 * 2, ii = document.getElementById("inspInfo");
+  ii.textContent = list.length + " inspection" + (list.length === 1 ? "" : "s") +
+    " saved on this device, newest first. Storage used: about " + mb.toFixed(1) + " MB of 5 MB." +
+    (mb > 4 ? " Getting full: export a backup and delete inspections you have already uploaded." : "");
+  ii.style.color = mb > 4 ? "#cc3300" : "#666";
+  ii.style.fontWeight = mb > 4 ? "bold" : "normal";
   document.getElementById("inspSearch").value = "";
   showScreen("screen-inspections");
+}
+
+// Start a new inspection from a saved one (same findings, today's date). The original is not changed.
+function reinspect(id) {
+  var src = loadAll()[id];
+  if (!src) return;
+  if (!confirm("Start a reinspection of " + inspTitle(src.form || {}) + "?\n\nThis makes a new copy with all the old findings, dated today. The original report stays as it was.")) return;
+  saveNow();
+  var rec = JSON.parse(JSON.stringify(src));
+  var now = new Date();
+  rec.id = newId();
+  rec.createdAt = rec.savedAt = now.toISOString();
+  rec.form = rec.form || {};
+  var y = now.getFullYear(), m = ("0" + (now.getMonth() + 1)).slice(-2), d = ("0" + now.getDate()).slice(-2);
+  rec.form["fi-date"] = y + "-" + m + "-" + d;
+  var all = loadAll();
+  all[rec.id] = rec;
+  if (!writeAll(all)) return;
+  openInspection(rec.id, true);
+  alert("Reinspection started. Go through each area and update what changed, then save the PDF and XML as usual.");
+}
+
+// Save one inspection as its own file (to keep in Files / iCloud and bring back later)
+function exportOne(id) {
+  if (id === currentInspId) saveNow();
+  var rec = loadAll()[id];
+  if (!rec) return;
+  var data = { format: "insp-backup", version: 1, exportedAt: new Date().toISOString(), inspections: [rec] };
+  var blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  var base = (inspTitle(rec.form || {}) || "inspection").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60);
+  a.href = url;
+  a.download = "Inspection_" + base + "_" + String(rec.createdAt || rec.savedAt || "").slice(0, 10) + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
+}
+
+var pickData = [];
+function showPicker(list) {
+  pickData = list;
+  var all = loadAll();
+  var box = document.getElementById("pickList");
+  box.innerHTML = "";
+  list.forEach(function(rec, i) {
+    var row = document.createElement("label");
+    row.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #ddd;cursor:pointer;";
+    var who = ((rec.info && rec.info.persons) || []).map(function(p) { return [p.first, p.last, p.biz].join(" "); }).join(" ");
+    row.setAttribute("data-search", (inspTitle(rec.form || {}) + " " + who).toLowerCase());
+    var cb = document.createElement("input");
+    cb.type = "checkbox"; cb.setAttribute("data-i", i);
+    cb.style.cssText = "width:20px;height:20px;flex:none;";
+    var tx = document.createElement("div");
+    tx.innerHTML = "<div style='font-weight:bold;font-size:14px;'></div><div style='font-size:11px;color:#666;'></div>";
+    tx.firstChild.textContent = inspTitle(rec.form || {});
+    tx.lastChild.textContent = (rec.createdAt ? "Started " + new Date(rec.createdAt).toLocaleDateString() : "") +
+      (all[rec.id] ? "  \u00b7  already on this device (will be replaced)" : "");
+    row.appendChild(cb); row.appendChild(tx);
+    box.appendChild(row);
+  });
+  document.getElementById("pickInfo").textContent = list.length + " inspections in this backup. Tick the ones you want, then tap Import selected.";
+  document.getElementById("pickSearch").value = "";
+  document.getElementById("inspList").style.display = "none";
+  document.getElementById("importPicker").style.display = "block";
+  window.scrollTo(0, 0);
+}
+function filterPicker() {
+  var words = document.getElementById("pickSearch").value.toLowerCase().split(/\s+/).filter(Boolean);
+  document.querySelectorAll("#pickList > label").forEach(function(row) {
+    var t = row.getAttribute("data-search");
+    row.style.display = words.every(function(w) { return t.indexOf(w) >= 0; }) ? "flex" : "none";
+  });
+}
+function closePicker() {
+  document.getElementById("importPicker").style.display = "none";
+  document.getElementById("inspList").style.display = "";
+  pickData = [];
+}
+function importPicked() {
+  var chosen = [];
+  document.querySelectorAll("#pickList input[type=checkbox]").forEach(function(cb) {
+    if (cb.checked) chosen.push(pickData[+cb.getAttribute("data-i")]);
+  });
+  if (!chosen.length) { alert("Tick at least one inspection to import."); return; }
+  closePicker();
+  importRecords(chosen);
 }
 
 function filterInspections() {
@@ -5816,30 +5937,36 @@ function importBackup(input) {
     try {
       var data = JSON.parse(reader.result);
       if (!data || !/-backup$/.test(data.format || "") || !data.inspections) throw new Error("Not an inspection backup file.");
-      var all = loadAll();
-      var added = 0, replaced = 0;
-      data.inspections.forEach(function(rec) {
-        if (!rec || !rec.id || !(rec.rooms || rec.units)) return;
-        if (all[rec.id]) replaced++; else added++;
-        try { compactRecord(rec); } catch (e) {}
-        all[rec.id] = rec;
-      });
-      if (!writeAll(all)) throw new Error("Could not save to this browser.");
-      alert("Backup imported: " + added + " added, " + replaced + " updated.");
-      // Reload what's on screen from the imported data. Don't save the on-screen copy
-      // first, or it would overwrite the inspection that was just imported.
-      if (all[currentInspId]) {
-        openInspection(currentInspId, true);
-        showInspections();
-      } else {
-        showInspections();
-      }
+      var list = data.inspections.filter(function(rec) { return rec && rec.id && (rec.rooms || rec.units); })
+        .sort(function(a, b) { return (b.createdAt || b.savedAt || "").localeCompare(a.createdAt || a.savedAt || ""); });
+      if (list.length > 1) showPicker(list);
+      else importRecords(list);
     } catch (e) {
       alert("Import failed: " + e.message);
     }
     input.value = "";
   };
   reader.readAsText(file);
+}
+function importRecords(list) {
+  clearTimeout(saveTimer);
+  try {
+    var all = loadAll();
+    var added = 0, replaced = 0;
+    list.forEach(function(rec) {
+      if (all[rec.id]) replaced++; else added++;
+      try { compactRecord(rec); } catch (e) {}
+      all[rec.id] = rec;
+    });
+    if (!writeAll(all)) throw new Error("Could not save to this browser.");
+    alert("Backup imported: " + added + " added, " + replaced + " updated.");
+    // Reload what's on screen from the imported data. Don't save the on-screen copy
+    // first, or it would overwrite the inspection that was just imported.
+    if (all[currentInspId]) openInspection(currentInspId, true);
+    showInspections();
+  } catch (e) {
+    alert("Import failed: " + e.message);
+  }
 }
 
 guardField("fi-address");
@@ -6095,7 +6222,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 15, 2026 (l)";
+var APP_VERSION = "Oct 16, 2026 (n)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
