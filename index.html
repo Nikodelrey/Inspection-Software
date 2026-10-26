@@ -5263,6 +5263,8 @@ function xmlAnalyticValue(key, v) {
     return sq || v;
   }
   // City codes for insulation type (from the City's upload error message)
+  // City accepts only natural draft | induced draft | condensing | na (from the City's upload error)
+  if (key === "hs-vent" && /^condensing/i.test(v)) return "condensing";
   if (key === "attic-instype" || key === "wall-instype") {
     var ins = { "Fiberglass": "ob fg", "Cellulose": "dp cellulose", "Mineral Wool": "mineral wool batt", "Rigid Foam": "extr polysty" };
     return ins[v] || v.toLowerCase();
@@ -6225,7 +6227,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 16, 2026 (o)";
+var APP_VERSION = "Oct 26, 2026 (p)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
