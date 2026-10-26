@@ -5991,18 +5991,25 @@ document.addEventListener("input", function(e) { if (e.target && EVAL_FIELDS[e.t
   function isTyping(el) {
     return el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !/^(checkbox|radio|button|submit|file)$/.test(el.type)));
   }
+  // Only move the page when the field is actually hidden (behind the keyboard or above the top),
+  // and only when the field gets focus or the keyboard first opens, never while typing.
+  var lastH = vv ? vv.height : window.innerHeight;
   function adjust() {
     var el = document.activeElement;
     if (!isTyping(el)) return;
     var r = el.getBoundingClientRect();
     var top = vv ? vv.offsetTop : 0;
     var h = vv ? vv.height : window.innerHeight;
-    if (r.top < top + 50 || r.bottom > top + h - 30) {
+    if (r.bottom > top + h - 8 || r.top < top + 4) {
       window.scrollBy(0, r.top - top - h * 0.3);
     }
   }
-  document.addEventListener("focusin", function(e) { if (isTyping(e.target)) setTimeout(adjust, 350); });
-  if (vv) vv.addEventListener("resize", function() { setTimeout(adjust, 50); });
+  document.addEventListener("focusin", function(e) { if (isTyping(e.target)) setTimeout(adjust, 400); });
+  if (vv) vv.addEventListener("resize", function() {
+    var h = vv.height, opened = h < lastH - 120;   // keyboard just opened (not the suggestion bar changing)
+    lastH = h;
+    if (opened) setTimeout(adjust, 80);
+  });
 })();
 
 // Save on every edit, and when leaving or hiding the page
@@ -6227,7 +6234,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Oct 26, 2026 (p)";
+var APP_VERSION = "Oct 26, 2026 (q)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 </script>
 </body>
