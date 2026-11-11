@@ -3940,7 +3940,14 @@ function ownerResidesChanged(v) {
   info.ownerResides = v;
   var p = primaryPerson();
   if (v === "Yes" && !p.addr) {
-    p.addr = GUARDED["fi-address"];
+    // Split "4641 3rd Ave S Minneapolis MN 55409" into street / city / zip
+    var full = String(GUARDED["fi-address"] || "").trim();
+    var zm = full.match(/[ ,]+(\d{5})(-\d{4})?$/);
+    if (zm) { if (!p.zip) p.zip = zm[1]; full = full.slice(0, zm.index); }
+    full = full.replace(/[ ,]+(MN|Minnesota)$/i, "");
+    var cm = full.match(/[ ,]+(Minneapolis|Mpls)$/i);
+    if (cm) full = full.slice(0, cm.index);
+    p.addr = full.replace(/[ ,]+$/, "");
     if (!p.city) p.city = "Minneapolis";
     if (!p.state) p.state = "MN";
     renderPersons();
@@ -3954,13 +3961,16 @@ function ownerNext() {
   a.classList.toggle("req-empty", !GUARDED["fi-address"].trim());
   if (!GUARDED["fi-address"].trim()) missing = true;
   var p = primaryPerson(), pi = info.persons.indexOf(p);
+  var names = { first: "First Name", last: "Last Name", addr: "Owner Address", city: "City", state: "State", zip: "Zip Code", p1num: "Phone" };
+  var empties = GUARDED["fi-address"].trim() ? [] : ["Property Address"];
   ["first", "last", "addr", "city", "state", "zip", "p1num"].forEach(function(k) {
     var el = document.querySelector('#personsBox [data-i="' + pi + '"][data-k="' + k + '"]');
     var empty = !String(p[k] || "").trim();
     if (el) el.classList.toggle("req-empty", empty);
-    if (empty) missing = true;
+    if (empty) { missing = true; empties.push(names[k]); }
   });
-  if (missing && !confirm("Some required fields (marked *) are empty. Continue anyway? You can fill them in later.")) return;
+  // Only the primary contact's first phone is required; the second phone and other people are optional.
+  if (missing && !confirm("Still empty: " + empties.join(", ") + ".\n\nContinue anyway? You can fill them in later.")) return;
   saveNow();
   if (flowMode === "new") showDwelling("new"); else showMain();
 }
@@ -4512,6 +4522,12 @@ function openItem(itemId) {
         var s2 = rooms[currentCatId][currentRoomIdx].itemStates[iid];
         s2.conditions[i].checked = this.checked;
         if (this.checked) s2.meetsReq = false;   // a finding means it doesn't meet requirements
+        else {
+          // unchecking a condition clears its comment too
+          s2.conditions[i].comment = "";
+          var box = this.closest("tr") && this.closest("tr").querySelector(".cond-comment-input");
+          if (box) box.value = "";
+        }
       };
     })(itemId, idx));
     td1.appendChild(chk);
@@ -6241,7 +6257,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Nov 11, 2026 (s)";
+var APP_VERSION = "Nov 11, 2026 (u)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 
 // ---- Fill the City's "Confirm Owner Information" page (with the City Fill bookmark) ----
