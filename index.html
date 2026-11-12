@@ -4323,6 +4323,24 @@ function renderExtraFields(cat, room) {
       });
     };
     atA.addEventListener("change", atSync);
+    atA.addEventListener("change", function() {
+      // Not accessible: items 74-76 get "C: Other Comment: Not visible" (unless already filled in)
+      if (atA.value !== "No") return;
+      var cat = categories.find(function(c) { return c.id === currentCatId; });
+      var room = rooms[currentCatId][currentRoomIdx];
+      ["attic-74", "attic-75", "attic-76"].forEach(function(iid) {
+        var item = cat.items.find(function(it) { return it.id === iid; });
+        var st = room.itemStates[iid];
+        if (!item || !st || st.conditions.some(function(c) { return c.checked; })) return;
+        st.meetsReq = false;
+        var i = item.conditions.findIndex(function(c) { return c.code === "C" && /^Other Comment/.test(c.text); });
+        if (i < 0) return;
+        st.conditions[i].checked = true;
+        st.conditions[i].comment = "Not visible";
+      });
+      renderCategoryItems(cat, room);
+      if (typeof scheduleSave === "function") scheduleSave();
+    });
     atSync();
   }
 
@@ -6257,7 +6275,7 @@ function showSpell() {
   startSpell();
 }
 initSpell();
-var APP_VERSION = "Nov 11, 2026 (u)";
+var APP_VERSION = "Nov 12, 2026 (v)";
 document.getElementById("appVersion").textContent = "App version: " + APP_VERSION;
 
 // ---- Fill the City's "Confirm Owner Information" page (with the City Fill bookmark) ----
